@@ -29,32 +29,24 @@ jobs:
         run: npm install
 
       - name: Initialize Capacitor Android
-        run: |
-          npx cap add android
+        run: npx cap add android
 
-      - name: Inject Permissions and Copy Icons
+      - name: Configure Manifest & Icons
         run: |
-          # إضافة تصاريح الإشعارات إلى AndroidManifest.xml
           MANIFEST="android/app/src/main/AndroidManifest.xml"
+          
+          # إضافة الأذونات المطلوبة للإشعارات
           sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>' $MANIFEST
           sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.VIBRATE" \/>' $MANIFEST
-          
-          # نسخ الأيقونة لتكون أيقونة التطبيق الرسمية
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          cp www/icon-512.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-          cp www/icon-512.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>' $MANIFEST
+
+          # نسخ الأيقونات لكافة الأحجام
+          for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+            mkdir -p android/app/src/main/res/$dir
+            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher.png
+            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher_round.png
+            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher_foreground.png
+          done
 
       - name: Sync Capacitor
         run: npx cap sync android
