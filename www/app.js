@@ -1,16 +1,38 @@
-// طلب إذن الإشعارات واستثناء البطارية للعمل في الخلفية بأمان
-async function initAppPermissions() {
-  if (window.Capacitor && window.Capacitor.Plugins) {
-    // 1. طلب إذن الإشعارات المحلية الآمن لأندرويد
+import { PushNotifications } from '@capacitor/push-notifications';
+
+// تسجيل الإشعارات السحابية
+async function initPushNotifications(userId) {
+  if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
     try {
-      if (window.Capacitor.Plugins.LocalNotifications) {
-        let permStatus = await window.Capacitor.Plugins.LocalNotifications.checkPermissions();
-        if (permStatus.display === 'prompt' || permStatus.display === 'prompt-with-rationale') {
-          await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
-        }
+      // 1. طلب إذن الإشعارات من المستخدم
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
       }
+
+      if (permStatus.receive === 'granted') {
+        // 2. التسجيل لدى FCM
+        await PushNotifications.register();
+      }
+
+      // 3. الحصول على الـ Token وحفظه في Supabase
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('FCM Token:', token.value);
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({ fcm_token: token.value })
+            .eq('id', userId);
+        }
+      });
+
+      // 4. الاستماع للإشعارات في حال كانت الشاشة مفتوحة
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Notification received: ', notification);
+      });
+
     } catch (e) {
-      console.log('Notification permission request error:', e);
+      console.error('Error initializing Push Notifications', e);
     }
   }
 }
