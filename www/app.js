@@ -1,26 +1,16 @@
-// طلب إذن الإشعارات واستثناء البطارية للعمل في الخلفية
+// طلب إذن الإشعارات واستثناء البطارية للعمل في الخلفية بأمان
 async function initAppPermissions() {
-  if (window.Capacitor) {
-    // 1. طلب إذن الإشعارات
-    if (window.Capacitor.isPluginAvailable('PushNotifications')) {
-      const { PushNotifications } = window.Capacitor.Plugins;
-      let permStatus = await PushNotifications.checkPermissions();
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions();
+  if (window.Capacitor && window.Capacitor.Plugins) {
+    // 1. طلب إذن الإشعارات المحلية الآمن لأندرويد
+    try {
+      if (window.Capacitor.Plugins.LocalNotifications) {
+        let permStatus = await window.Capacitor.Plugins.LocalNotifications.checkPermissions();
+        if (permStatus.display === 'prompt' || permStatus.display === 'prompt-with-rationale') {
+          await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+        }
       }
-      if (permStatus.receive === 'granted') {
-        await PushNotifications.register();
-      }
-    }
-
-    // 2. طلب استثناء البطارية لضمان العمل في الخلفية
-    if (window.Capacitor.isPluginAvailable('BackgroundRunner')) {
-      const { BackgroundRunner } = window.Capacitor.Plugins;
-      try {
-        await BackgroundRunner.requestPermissions();
-      } catch (e) {
-        console.log('Background execution enabled');
-      }
+    } catch (e) {
+      console.log('Notification permission request error:', e);
     }
   }
 }
@@ -32,16 +22,14 @@ document.addEventListener('DOMContentLoaded', initAppPermissions);
 async function requestAppPermissionsOnFirstLaunch() {
     const hasPrompted = localStorage.getItem('app_permissions_requested_v1');
     if (!hasPrompted) {
-        if ('Notification' in window && Notification.permission !== 'granted') {
-            try { await Notification.requestPermission(); } catch (e) {}
-        }
-        if (window.Capacitor && window.Capacitor.Plugins) {
-            if (window.Capacitor.Plugins.PushNotifications) {
-                try { await window.Capacitor.Plugins.PushNotifications.requestPermissions(); } catch(e){}
+        try {
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+                await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+            } else if ('Notification' in window && Notification.permission !== 'granted') {
+                await Notification.requestPermission();
             }
-            if (window.Capacitor.Plugins.BackgroundMode) {
-                try { window.Capacitor.Plugins.BackgroundMode.enable(); } catch(e){}
-            }
+        } catch (e) {
+            console.log("Permission error:", e);
         }
         localStorage.setItem('app_permissions_requested_v1', 'true');
     }
@@ -57,14 +45,36 @@ function checkProfanity(text) {
 }
 
 async function triggerNotification(title, body, imageUrl = null) {
-    if (Notification.permission === "granted" && (document.hidden || currentActivePage !== 'support')) {
-        const notificationOptions = {
-            body: body,
-            icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
-            badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
-            image: imageUrl ? imageUrl : undefined
-        };
-        try { new Notification(title, notificationOptions); } catch (e) {}
+    if (document.hidden || currentActivePage !== 'support') {
+        // إذا كان التطبيق يعمل عبر Capacitor في أندرويد
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
+            try {
+                await window.Capacitor.Plugins.LocalNotifications.schedule({
+                    notifications: [
+                        {
+                            title: title,
+                            body: body,
+                            id: new Date().getTime() % 100000,
+                            schedule: { at: new Date(Date.now() + 100) },
+                            actionTypeId: "",
+                            extra: null
+                        }
+                    ]
+                });
+            } catch (e) {
+                console.log("LocalNotification Error:", e);
+            }
+        } 
+        // إذا كان التطبيق يعرض في المتصفح العادي
+        else if ("Notification" in window && Notification.permission === "granted") {
+            const notificationOptions = {
+                body: body,
+                icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
+                badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
+                image: imageUrl ? imageUrl : undefined
+            };
+            try { new Notification(title, notificationOptions); } catch (e) {}
+        }
     }
 }
 
@@ -169,6 +179,7 @@ let isChatLocked = false;
 let activeSupportRoomId = null;
 let currentActivePage = 'chat'; 
 let tempUserDataAfterSignUp = null;
+let activeContextMenu = null;
 
 function log(text) {
     const m = document.getElementById('monitor');
@@ -586,24 +597,27 @@ async function sendSupportMessage() {
     document.getElementById('support-msg-text').value = '';
 }
 
-document.getElementById('image-upload').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if(!file || !myProfile || !activeSupportRoomId) return;
-    
-    log("جاري رفع الصورة...");
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    
-    const { error: uploadError } = await _supabase.storage.from('chat-media').upload(`private/${fileName}`, file);
-    if(uploadError) return alert("خطأ في رفع الصورة: " + uploadError.message);
+const imageUploadElem = document.getElementById('image-upload');
+if (imageUploadElem) {
+    imageUploadElem.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(!file || !myProfile || !activeSupportRoomId) return;
+        
+        log("جاري رفع الصورة...");
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await _supabase.storage.from('chat-media').upload(`private/${fileName}`, file);
+        if(uploadError) return alert("خطأ في رفع الصورة: " + uploadError.message);
 
-    const { data } = _supabase.storage.from('chat-media').getPublicUrl(`private/${fileName}`);
-    
-    await _supabase.from('private_chats').insert({
-        sender_id: myProfile.id, sender_name: myProfile.username, username: myProfile.username,
-        image_url: data.publicUrl, role: myProfile.role, room_id: activeSupportRoomId, is_read: false
+        const { data } = _supabase.storage.from('chat-media').getPublicUrl(`private/${fileName}`);
+        
+        await _supabase.from('private_chats').insert({
+            sender_id: myProfile.id, sender_name: myProfile.username, username: myProfile.username,
+            image_url: data.publicUrl, role: myProfile.role, room_id: activeSupportRoomId, is_read: false
+        });
     });
-});
+}
 
 async function loadSupportMessages(roomId) {
     const box = document.getElementById('support-box');
