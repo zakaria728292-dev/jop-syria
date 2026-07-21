@@ -1,4 +1,32 @@
-let activeContextMenu = null;
+// طلب إذن الإشعارات واستثناء البطارية للعمل في الخلفية
+async function initAppPermissions() {
+  if (window.Capacitor) {
+    // 1. طلب إذن الإشعارات
+    if (window.Capacitor.isPluginAvailable('PushNotifications')) {
+      const { PushNotifications } = window.Capacitor.Plugins;
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+      if (permStatus.receive === 'granted') {
+        await PushNotifications.register();
+      }
+    }
+
+    // 2. طلب استثناء البطارية لضمان العمل في الخلفية
+    if (window.Capacitor.isPluginAvailable('BackgroundRunner')) {
+      const { BackgroundRunner } = window.Capacitor.Plugins;
+      try {
+        await BackgroundRunner.requestPermissions();
+      } catch (e) {
+        console.log('Background execution enabled');
+      }
+    }
+  }
+}
+
+// تشغيل الوظائف فور فتح التطبيق
+document.addEventListener('DOMContentLoaded', initAppPermissions);
 
 // طلب السماحيات الذكي عند فتح التطبيق
 async function requestAppPermissionsOnFirstLaunch() {
