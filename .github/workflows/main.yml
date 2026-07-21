@@ -11,54 +11,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
 
-      - name: Set up Java JDK
-        uses: actions/setup-java@v4
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Initialize Capacitor Android
-        run: npx cap add android
-
-      - name: Configure Manifest & Icons
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          npm install
+          npm install @capacitor/core @capacitor/android @capacitor/push-notifications
+
+      - name: Build Web App & Add Android
+        run: |
+          npx cap add android || true
           
-          # إضافة الأذونات المطلوبة للإشعارات
-          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>' $MANIFEST
-          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.VIBRATE" \/>' $MANIFEST
-          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>' $MANIFEST
+          # Copy google-services.json to android/app if present
+          if [ -f "google-services.json" ]; then
+            mkdir -p android/app
+            cp google-services.json android/app/google-services.json
+            echo "google-services.json copied to android/app!"
+          fi
 
-          # نسخ الأيقونات لكافة الأحجام
-          for dir in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
-            mkdir -p android/app/src/main/res/$dir
-            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher.png
-            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher_round.png
-            cp www/icon-512.png android/app/src/main/res/$dir/ic_launcher_foreground.png
-          done
-
-      - name: Sync Capacitor
-        run: npx cap sync android
+          npx cap sync android
 
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: JobSyria-App-v1.0.1
+          name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
