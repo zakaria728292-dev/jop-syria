@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Syria</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --green: #28a745;
+            --red: #dc3545;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0; padding: 0;
+            user-select: none;
+        }
+        .hidden { display: none !important; }
+        .page { padding: 15px; padding-bottom: 70px; }
+        .admin-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .btn-broadcast {
+            background-color: var(--red);
+            color: white;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .msg-user { font-weight: bold; color: var(--gold); }
+        .msg-green { color: #34c759 !important; }
+        .msg { background: #222; padding: 8px; border-radius: 6px; margin-bottom: 6px; }
+        .chat-img { max-width: 100%; border-radius: 6px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- محتوى الصفحات -->
+    <div id="page-support" class="page hidden">
+        <h3>الدعم الفني 🎧</h3>
+        <div id="support-admin-controls"></div>
+        <label id="support-select-label" style="font-size: 12px; color: #888;"></label>
+        <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="width: 100%; padding: 8px; margin-bottom: 10px;"></select>
+        
+        <div id="support-box" style="height: 300px; overflow-y: auto; background: #000; padding: 10px; border-radius: 8px;"></div>
+        
+        <div style="display: flex; gap: 5px; margin-top: 10px;">
+            <input type="text" id="support-msg-text" placeholder="اكتب رسالتك..." style="flex: 1; padding: 8px;">
+            <button onclick="sendSupportMessage()" style="background: var(--gold); color: #000;">إرسال</button>
+            <input type="file" id="image-upload" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('image-upload').click()" style="background: #444; color: #fff;">📷</button>
+        </div>
+    </div>
+
+    <div id="page-settings" class="page hidden">
+        <h3>الإعدادات ⚙️</h3>
+        <input type="text" id="new-username" placeholder="الاسم الجديد" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+        <button onclick="updateUsername()" style="background: var(--gold); color: #000; width: 100%;">حفظ الاسم الجديد</button>
+        
+        <!-- زر قناة الواتساب -->
+        <button onclick="window.open('https://whatsapp.com/channel/0029VbD3iZwI1rcbiOIUjn3z', '_blank')" class="btn-whatsapp">
+            الانضمام إلى قناتنا على واتس اب 💬
+        </button>
+
+        <button onclick="openContactUs()" style="background: #333; color: #fff; width: 100%;">تواصل معنا</button>
+    </div>
+
+<script>
+    // 🌟 تهيئة وتدقيق الإشعارات مع Capacitor الموبايل 🌟
+    async function initCapacitorNotifications() {
+        if (window.Capacitor && window.Capacitor.Plugins.PushNotifications) {
+            const { PushNotifications } = window.Capacitor.Plugins;
+
+            let permStatus = await PushNotifications.checkPermissions();
+            if (permStatus.receive !== 'granted') {
+                permStatus = await PushNotifications.requestPermissions();
+            }
+
+            if (permStatus.receive === 'granted') {
+                await PushNotifications.register();
+            }
+
+            PushNotifications.addListener('registration', async (token) => {
+                if (myProfile && myProfile.id) {
+                    await _supabase.from('profiles').update({ fcm_token: token.value }).eq('id', myProfile.id);
+                }
+            });
+
+            PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                console.log('Notification received: ', notification);
+            });
+        }
+    }
+
+    // 🌟 تكييف خيارات الدعم وإظهار الرتب ورسالة الإدارة الجماعية 🌟
+    async function loadSupportRoomsSelector() {
+        const selector = document.getElementById('support-room-selector');
+        const label = document.getElementById('support-select-label');
+        const adminControls = document.getElementById('support-admin-controls');
+        if(!selector || !myProfile) return;
+
+        // استبدال admin برتبة مشرف
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+
+        if (isStaff) {
+            label.innerText = "اختر غرفة العميل/الموظف للرد عليه:";
+            
+            if (adminControls) {
+                adminControls.innerHTML = `
+                    <button class="btn-broadcast" onclick="sendBroadcastSupportMessage()">📢 إرسال رسالة جماعية لجميع الموظفين</button>
+                `;
+            }
+
+            const { data: users } = await _supabase.from('profiles').select('id, username').eq('role', 'موظف');
+            
+            let unreadRooms = new Set();
+            try {
+                const { data: unreadData } = await _supabase.from('private_chats').select('room_id, sender_id').eq('is_read', false);
+                if (unreadData) {
+                    unreadData.forEach(msg => {
+                        const rId = String(msg.room_id).trim().toLowerCase();
+                        const sId = String(msg.sender_id).trim().toLowerCase();
+                        if (sId === rId) unreadRooms.add(rId);
+                    });
+                }
+            } catch (e) {}
+
+            if(users && users.length > 0) {
+                const currentSelected = selector.value || activeSupportRoomId || users[0].id;
+                selector.innerHTML = users.map(u => {
+                    const userIdClean = String(u.id).trim().toLowerCase();
+                    const activeRoomClean = activeSupportRoomId ? String(activeSupportRoomId).trim().toLowerCase() : '';
+                    const hasUnread = unreadRooms.has(userIdClean) && userIdClean !== activeRoomClean;
+                    const dot = hasUnread ? ' 🔴' : '';
+                    return `<option value="${u.id}" ${u.id === currentSelected ? 'selected' : ''}>${u.username}${dot}</option>`;
+                }).join('');
+                
+                if(!activeSupportRoomId) { 
+                    activeSupportRoomId = currentSelected; 
+                    await markRoomAsRead(activeSupportRoomId);
+                }
+            } else {
+                selector.innerHTML = '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
+            }
+        } else {
+            if (adminControls) adminControls.innerHTML = '';
+            label.innerText = "اختر الشخص المسؤول للبدء بالتواصل معه:";
+            
+            const { data: staffList } = await _supabase
+                .from('profiles')
+                .select('id, username, role')
+                .in('role', ['مشرف', 'مدير', 'مدير مالي']);
+
+            if (staffList && staffList.length > 0) {
+                selector.innerHTML = staffList.map(s => {
+                    const displayRole = s.role === 'admin' ? 'مشرف' : s.role;
+                    return `<option value="${myProfile.id}">${s.username} (${displayRole})</option>`;
+                }).join('');
+                activeSupportRoomId = myProfile.id;
+            } else {
+                selector.innerHTML = `<option value="${myProfile.id}">الإدارة العامة (مدير)</option>`;
+                activeSupportRoomId = myProfile.id;
+            }
+        }
+    }
+
+    // 🌟 إرسال رسالة دعم جماعية لكافة الموظفين 🌟
+    async function sendBroadcastSupportMessage() {
+        const text = prompt("اكتب الرسالة الجماعية التي تريد إرسالها لجميع الموظفين في الدعم:");
+        if (!text || !text.trim()) return;
+
+        const { data: employees } = await _supabase.from('profiles').select('id').eq('role', 'موظف');
+        if (employees && employees.length > 0) {
+            const broadcastMessages = employees.map(emp => ({
+                sender_id: myProfile.id,
+                sender_name: myProfile.username,
+                username: myProfile.username,
+                message_text: `[رسالة جماعية]: ${text.trim()}`,
+                role: myProfile.role,
+                room_id: emp.id,
+                is_read: false
+            }));
+
+            const { error } = await _supabase.from('private_chats').insert(broadcastMessages);
+            if (error) alert("خطأ أثناء الإرسال الجماعي: " + error.message);
+            else alert("تم إرسال الرسالة الجماعية لجميع الموظفين بنجاح! 🎉");
+        }
+    }
+
+    // 🌟 استماع إشعارات الدعم الفني فقط 🌟
+    async function setupSupportRealtime() {
+        const box = document.getElementById('support-box');
+        if(!box || !activeSupportRoomId) return;
+        box.innerHTML = '';
+
+        const isStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(myProfile.role);
+
+        if (currentActivePage === 'support' && activeSupportRoomId === myProfile.id) {
+            await markRoomAsRead(activeSupportRoomId);
+        }
+        
+        await loadSupportMessages(activeSupportRoomId);
+
+        _supabase.channel('private_chats_global_channel').unsubscribe();
+        _supabase.channel('private_chats_global_channel')
+            .on('postgres_changes', { event: 'INSERT', table: 'private_chats' }, async p => {
+                const newMsg = p.new;
+                const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
+                
+                if (newMsg.room_id === activeSupportRoomId) {
+                    appendMessage(newMsg, 'support-box');
+                    if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
+                        await markRoomAsRead(activeSupportRoomId);
+                    }
+                }
+
+                // 🔥 إطلاق الإشعارات محصور لشات الدعم الفني فقط 🔥
+                if (newMsg.sender_id !== myProfile.id) {
+                    if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
+                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                    } else if (isStaff && !isSenderStaff) {
+                        if (newMsg.room_id !== activeSupportRoomId || document.hidden || currentActivePage !== 'support') {
+                            triggerNotification(`دعم فني من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                        }
+                    }
+                }
+            })
+            .subscribe();
+    }
+
+    // 🌟 نظام الإحالة المثبت 🌟
+    function copyReferralLink() {
+        if (!myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار لحين جلب كود الإحالة الخاص بك...');
+        const baseUrl = "https://teal-douhua-036004.netlify.app/"; 
+        const referralLink = `${baseUrl}?ref=${myProfile.referral_code}`;
+        const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(formattedText).then(() => { alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); });
+        } else {
+            prompt("انسخ رابط الإحالة الخاص بك مباشرة من هنا:", formattedText);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        initCapacitorNotifications();
+    });
+</script>
+</body>
+</html>
