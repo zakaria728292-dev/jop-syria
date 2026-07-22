@@ -33,11 +33,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Add Android Platform & Sync
+      - name: Generate Clean Android Project & Sync
         run: |
-          npx cap add android || true
+          rm -rf android
+          npx cap add android
           npx cap copy android
           npx cap sync android
+
+      - name: Copy Firebase Google Services
+        run: |
+          mkdir -p android/app
+          cp google-services.json android/app/google-services.json || true
 
       - name: Build Android APK
         run: |
