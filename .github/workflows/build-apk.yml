@@ -33,23 +33,25 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Extract Package Name from Firebase
-        id: get_pkg
+      - name: Fix Package Name from Firebase before Android Generation
         run: |
-          PKG_NAME=$(jq -r '.client[0].client_info.android_client_info.package_name' google-services.json)
-          echo "PACKAGE_NAME=$PKG_NAME" >> $GITHUB_ENV
-          echo "Detected Package Name: $PKG_NAME"
+          node -e '
+            const fs = require("fs");
+            const gs = JSON.parse(fs.readFileSync("google-services.json", "utf8"));
+            const pkg = gs.client[0].client_info.android_client_info.package_name;
+            console.log("Firebase Package Name:", pkg);
+            
+            const configPath = "capacitor.config.json";
+            const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+            config.appId = pkg;
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+          '
 
       - name: Generate Clean Android Project & Sync
         run: |
           rm -rf android
           npx cap add android
           npx cap copy android
-          npx cap sync android
-
-      - name: Inject Package Name to Capacitor Config
-        run: |
-          npx cap config set appId "${{ env.PACKAGE_NAME }}"
           npx cap sync android
 
       - name: Copy Firebase Google Services
