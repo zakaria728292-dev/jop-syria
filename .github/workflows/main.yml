@@ -78,11 +78,12 @@ jobs:
     - name: Build Android APK
       run: |
         cd android
-        if [ ! -f "gradlew" ]; then
-          gradle wrapper
+        if [ -f "gradlew" ]; then
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        else
+          gradle assembleDebug
         fi
-        chmod +x gradlew
-        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
