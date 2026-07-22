@@ -24,7 +24,7 @@ jobs:
 
     - name: Prepare Assets & Android Platform
       run: |
-        # 1. تجهيز مجلد assets وتوليد الأيقونات
+        # 1. تجهيز الأيقونات في مجلد assets
         mkdir -p assets
         if [ -f "www/icon-192.png" ]; then
           cp www/icon-192.png assets/icon-only.png
@@ -32,21 +32,21 @@ jobs:
           cp www/icon-192.png assets/icon-background.png
         fi
 
-        # 2. إزالة وإعادة إضافة مشروع أندرويد لإنشاء الأيقونات الأصلية
+        # 2. إعادة إعداد منصة أندرويد لضمان الهيكلية النظيفة
         rm -rf android
         npx cap add android
 
-        # 3. توليد الأيقونات الرسمية لأندرويد
+        # 3. توليد الأيقونات الرسمية لتطبيق أندرويد
         npx @capacitor/assets generate --android || true
 
-        # 4. نقل ملف Firebase
+        # 4. نقل ملف google-services.json إلى المكان المخصص
         mkdir -p android/app
         FOUND_FILE=$(find . -maxdepth 3 -name "google-services.json" | head -n 1)
         if [ -n "$FOUND_FILE" ] && [ "$FOUND_FILE" != "./android/app/google-services.json" ]; then
           cp "$FOUND_FILE" android/app/google-services.json
         fi
 
-        # 5. مزامنة Capacitor
+        # 5. مزامنة Capacitor مع مشروع أندرويد
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions & Services
@@ -55,14 +55,14 @@ jobs:
         APP_BUILD_GRADLE="android/app/build.gradle"
         MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-        # إضافة بيلد جيردل الرئيسي
+        # إضافة مكتبة Firebase بيلد جيردل الرئيسي
         if [ -f "$BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
             sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
           fi
         fi
 
-        # إضافة بلاجن الفايربيس
+        # تطبيق إضافة الفايربيس في تطبيق أندرويد
         if [ -f "$APP_BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms.google-services" "$APP_BUILD_GRADLE"; then
             echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
@@ -75,7 +75,6 @@ jobs:
             sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
           fi
 
-          # إضافة Firebase Messaging Service لمنع الـ Crash
           SERVICE_TAG='<service android:name="com.google.firebase.messaging.FirebaseMessagingService" android:exported="false"><intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT"/></intent-filter></service>'
           if ! grep -q "FirebaseMessagingService" "$MANIFEST"; then
             sed -i "/<\/application>/i \        $SERVICE_TAG" "$MANIFEST"
