@@ -1,18 +1,18 @@
 {
-  "name": "job-syria-app",
+  "name": "job-syria",
   "version": "1.0.0",
-  "description": "Job Syria Native Application",
+  "description": "Job Syria Mobile App",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Web assets ready'"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@capacitor/android": "^5.0.0",
     "@capacitor/core": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
     "@capacitor/push-notifications": "^5.0.0"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^5.0.0"
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/assets": "^2.0.0"
   }
 }
