@@ -22,11 +22,10 @@ jobs:
 
     - name: Prepare Android Project & Assets
       run: |
-        # 1. إضافة المنصة ومزامنة الهيكل
+        # 1. إضافة أندرويد وتوليد المجلد
         npx cap add android || true
-        npx cap sync android
 
-        # 2. التأكد من وضع ملف google-services.json في مجلد android/app
+        # 2. ضمان نقل ملف google-services.json إلى المكان الصحيح
         mkdir -p android/app
         if [ ! -f "android/app/google-services.json" ]; then
           FOUND_FILE=$(find . -name "google-services.json" | head -n 1)
@@ -36,10 +35,10 @@ jobs:
           fi
         fi
 
-        # 3. توليد الأيقونات تلقائياً
+        # 3. توليد الأيقونات
         npx @capacitor/assets generate --iconAvailableSource www/icon-192.png || true
 
-        # 4. إعادة المزامنة النهائية
+        # 4. مزامنة المشروع
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions
@@ -48,21 +47,18 @@ jobs:
         APP_BUILD_GRADLE="android/app/build.gradle"
         MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-        # الحقن في android/build.gradle إن وجد
         if [ -f "$BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
             sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
           fi
         fi
 
-        # الحقن في android/app/build.gradle إن وجد
         if [ -f "$APP_BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms.google-services" "$APP_BUILD_GRADLE"; then
             echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
           fi
         fi
 
-        # الحقن في AndroidManifest.xml للإشعارات
         if [ -f "$MANIFEST" ]; then
           if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
             sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
@@ -78,12 +74,10 @@ jobs:
     - name: Build Android APK
       run: |
         cd android
-        if [ -f "gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew assembleDebug
-        else
-          gradle assembleDebug
-        fi
+        # إعادة توليد wrapper مجلد أندرويد الخاص بـ Gradle بشكل متوافق
+        gradle wrapper --gradle-version 8.0.2
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
