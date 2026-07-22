@@ -18,12 +18,42 @@ jobs:
         node-version: 18
 
     - name: Install dependencies
-      run: npm install
+      run: |
+        npm install
+        npm install -D @capacitor/assets
 
-    - name: Build Web App & Add Android
+    - name: Prepare Android Project & Assets
       run: |
         npx cap add android || true
+
+        # 1. نقل ملف Firebase إلى مجلد أندرويد لحل مشكلة الإشعارات
+        mkdir -p android/app
+        cp google-services.json android/app/google-services.json
+
+        # 2. توليد الأيقونات تلقائياً لحل مشكلة الأيقونة الافتراضية
+        npx @capacitor/assets generate --iconAvailableSource icon-512.png || true
+
+        # 3. مزامنة المشروع
         npx cap sync android
+
+    - name: Inject Firebase Gradle & Permissions
+      run: |
+        # إضافة إعدادات Firebase في build.gradle
+        BUILD_GRADLE="android/build.gradle"
+        if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
+          sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
+        fi
+
+        APP_BUILD_GRADLE="android/app/build.gradle"
+        if ! grep -q "com.google.gms.google-services" "$APP_BUILD_GRADLE"; then
+          echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
+        fi
+
+        # إضافة إذن الإشعارات لأجهزة أندرويد الحديثة
+        MANIFEST="android/app/src/main/AndroidManifest.xml"
+        if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
+          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
+        fi
 
     - name: Set up Java JDK 17
       uses: actions/setup-java@v3
@@ -33,13 +63,6 @@ jobs:
 
     - name: Build Android APK
       run: |
-        # التأكد من وجود ملفات gradle وفي حال عدم وجودها يتم إنشاؤها تلقائياً
-        if [ ! -f "android/gradlew" ]; then
-          rm -rf android
-          npx cap add android
-        fi
-        mkdir -p android/app
-        npx cap copy android
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug
