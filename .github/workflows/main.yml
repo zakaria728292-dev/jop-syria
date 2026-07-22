@@ -19,13 +19,13 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm install
-        npm install @capacitor/push-notifications@latest
-        npm install -D @capacitor/assets
+        npm install --legacy-peer-deps
+        npm install @capacitor/push-notifications --legacy-peer-deps
+        npm install -D @capacitor/assets --legacy-peer-deps
 
     - name: Prepare Assets & Android Platform
       run: |
-        # 1. حفظ نسخة احتياطية من google-services.json قبل أي عمل
+        # 1. حفظ نسخة احتياطية من google-services.json
         mkdir -p /tmp/backup_google
         if [ -f "android/app/google-services.json" ]; then
           cp android/app/google-services.json /tmp/backup_google/
@@ -45,7 +45,7 @@ jobs:
         rm -rf android
         npx cap add android
 
-        # 4. استعادة ملف google-services.json إلى المكانه الصحيح
+        # 4. استعادة ملف google-services.json إلى مكانه الصحيح
         mkdir -p android/app
         if [ -f "/tmp/backup_google/google-services.json" ]; then
           cp /tmp/backup_google/google-services.json android/app/google-services.json
