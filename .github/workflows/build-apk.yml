@@ -33,24 +33,30 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Fix Package Name from Firebase before Android Generation
+      - name: Fix Package Name from Firebase
         run: |
           node -e '
             const fs = require("fs");
             const gs = JSON.parse(fs.readFileSync("google-services.json", "utf8"));
             const pkg = gs.client[0].client_info.android_client_info.package_name;
-            console.log("Firebase Package Name:", pkg);
-            
             const configPath = "capacitor.config.json";
             const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
             config.appId = pkg;
             fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
           '
 
-      - name: Generate Clean Android Project & Sync
+      - name: Generate Clean Android Project
         run: |
           rm -rf android
           npx cap add android
+
+      - name: Generate App Icons
+        run: |
+          npx cap migrate assets || true
+          npx @capacitor/assets generate --android || true
+
+      - name: Sync Project & Copy Assets
+        run: |
           npx cap copy android
           npx cap sync android
 
