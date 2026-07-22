@@ -22,7 +22,7 @@ jobs:
 
     - name: Prepare Android Project & Assets
       run: |
-        # 1. إضافة المنصة ومزامنة الهيكل لضمان إنشاء كافة ملفات Gradle
+        # 1. إضافة المنصة ومزامنة الهيكل
         npx cap add android || true
         npx cap sync android
 
@@ -78,6 +78,9 @@ jobs:
     - name: Build Android APK
       run: |
         cd android
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper
+        fi
         chmod +x gradlew
         ./gradlew assembleDebug
 
