@@ -22,21 +22,25 @@ jobs:
 
     - name: Prepare Android Project & Assets
       run: |
-        # 1. إضافة أو تحديث منصة أندرويد
+        # 1. إضافة أندرويد إن لم يكن موجوداً
         npx cap add android || true
 
-        # 2. ضمان وجود الملف داخل android/app بالبحث الشامل في المستودع
-        FOUND_FILE=$(find . -name "google-services.json" | head -n 1)
-        if [ -n "$FOUND_FILE" ]; then
-          mkdir -p android/app
-          cp "$FOUND_FILE" android/app/google-services.json
-          echo "Successfully placed google-services.json in android/app/"
+        # 2. التأكد من وجود ملف google-services.json بذكاء بدون نسخ الملف على نفسه
+        mkdir -p android/app
+        if [ ! -f "android/app/google-services.json" ]; then
+          FOUND_FILE=$(find . -name "google-services.json" | head -n 1)
+          if [ -n "$FOUND_FILE" ]; then
+            cp "$FOUND_FILE" android/app/google-services.json
+            echo "Copied google-services.json from $FOUND_FILE"
+          fi
+        else
+          echo "google-services.json is already in android/app/"
         fi
 
-        # 3. توليد الأيقونات تلقائياً من أيقونة الويب
+        # 3. توليد الأيقونات تلقائياً
         npx @capacitor/assets generate --iconAvailableSource www/icon-192.png || true
 
-        # 4. مزامنة الملفات مع مشروع أندرويد
+        # 4. مزامنة الملفات مع أندرويد
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions
