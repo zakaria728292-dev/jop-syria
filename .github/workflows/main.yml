@@ -1,56 +1,62 @@
-name: Build Android APK
+Name: Build Android APK
 
-on:
-  push:
-    branches:
+On:
+  Push:
+    Branches:
       - main
-  workflow_dispatch:
+  Workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+Jobs:
+  Build:
+    Runs-on: ubuntu-latest
 
-    steps:
+    Steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        Uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+        Uses: actions/setup-node@v3
+        With:
+          Node-version: 18
 
       - name: Set up Java JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+        Uses: actions/setup-java@v3
+        With:
+          Distribution: 'zulu'
+          Java-version: '17'
 
       - name: Install dependencies
-        run: |
-          npm install
-          npm install @capacitor/core @capacitor/android @capacitor/push-notifications
+        Run: |
+          Npm install
+          Npm install @capacitor/core @capacitor/android @capacitor/push-notifications
 
       - name: Build Web App & Add Android
-        run: |
-          npx cap add android || true
-          
-          # Copy google-services.json to android/app if present
-          if [ -f "google-services.json" ]; then
-            mkdir -p android/app
-            cp google-services.json android/app/google-services.json
-            echo "google-services.json copied to android/app!"
-          fi
+        Run: |
+          # 1. تشغيل سكريبت البناء إن وجد في package.json لتجميع مكتبات Supabase والملفات
+          Npm run build --if-present
 
-          npx cap sync android
+          # 2. إضافة منصة الأندرويد إن لم تكن موجودة
+          Npx cap add android || true
+          
+          # 3. نسخ ملف google-services.json إلى مجلد التطبيق
+          If [ -f "google-services.json" ]; then
+            Mkdir -p android/app
+            Cp google-services.json android/app/google-services.json
+            Echo "google-services.json copied to android/app!"
+          Fi
+
+          # 4. نسخ ملفات www وتهيئة الأندرويد بالكامل
+          Npx cap copy android
+          Npx cap sync android
 
       - name: Build Android APK
-        run: |
-          cd android
-          chmod +x gradlew
+        Run: |
+          Cd android
+          Chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+        Uses: actions/upload-artifact@v4
+        With:
+          Name: app-debug
+          Path: android/app/build/outputs/apk/debug/app-debug.apk
