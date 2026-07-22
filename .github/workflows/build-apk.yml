@@ -33,6 +33,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Extract Package Name from Firebase
+        id: get_pkg
+        run: |
+          PKG_NAME=$(jq -r '.client[0].client_info.android_client_info.package_name' google-services.json)
+          echo "PACKAGE_NAME=$PKG_NAME" >> $GITHUB_ENV
+          echo "Detected Package Name: $PKG_NAME"
+
       - name: Generate Clean Android Project & Sync
         run: |
           rm -rf android
@@ -40,10 +47,15 @@ jobs:
           npx cap copy android
           npx cap sync android
 
+      - name: Inject Package Name to Capacitor Config
+        run: |
+          npx cap config set appId "${{ env.PACKAGE_NAME }}"
+          npx cap sync android
+
       - name: Copy Firebase Google Services
         run: |
           mkdir -p android/app
-          cp google-services.json android/app/google-services.json || true
+          cp google-services.json android/app/google-services.json
 
       - name: Build Android APK
         run: |
