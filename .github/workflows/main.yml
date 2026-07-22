@@ -20,11 +20,20 @@ jobs:
     - name: Install dependencies
       run: |
         npm install
+        npm install @capacitor/push-notifications@latest
         npm install -D @capacitor/assets
 
     - name: Prepare Assets & Android Platform
       run: |
-        # 1. تجهيز الأيقونات في مجلد assets
+        # 1. حفظ نسخة احتياطية من google-services.json قبل أي عمل
+        mkdir -p /tmp/backup_google
+        if [ -f "android/app/google-services.json" ]; then
+          cp android/app/google-services.json /tmp/backup_google/
+        elif [ -f "google-services.json" ]; then
+          cp google-services.json /tmp/backup_google/
+        fi
+
+        # 2. تجهيز مجلد assets للأيقونات
         mkdir -p assets
         if [ -f "www/icon-192.png" ]; then
           cp www/icon-192.png assets/icon-only.png
@@ -32,21 +41,21 @@ jobs:
           cp www/icon-192.png assets/icon-background.png
         fi
 
-        # 2. إعادة إعداد منصة أندرويد لضمان الهيكلية النظيفة
+        # 3. إعادة بناء مجلد android لربط مكتبات Push Notifications
         rm -rf android
         npx cap add android
 
-        # 3. توليد الأيقونات الرسمية لتطبيق أندرويد
-        npx @capacitor/assets generate --android || true
-
-        # 4. نقل ملف google-services.json إلى المكان المخصص
+        # 4. استعادة ملف google-services.json إلى المكانه الصحيح
         mkdir -p android/app
-        FOUND_FILE=$(find . -maxdepth 3 -name "google-services.json" | head -n 1)
-        if [ -n "$FOUND_FILE" ] && [ "$FOUND_FILE" != "./android/app/google-services.json" ]; then
-          cp "$FOUND_FILE" android/app/google-services.json
+        if [ -f "/tmp/backup_google/google-services.json" ]; then
+          cp /tmp/backup_google/google-services.json android/app/google-services.json
+          echo "Successfully restored google-services.json to android/app/"
         fi
 
-        # 5. مزامنة Capacitor مع مشروع أندرويد
+        # 5. توليد الأيقونات الرسمية
+        npx @capacitor/assets generate --android || true
+
+        # 6. مزامنة Capacitor
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions & Services
@@ -55,26 +64,30 @@ jobs:
         APP_BUILD_GRADLE="android/app/build.gradle"
         MANIFEST="android/app/src/main/AndroidManifest.xml"
 
-        # إضافة مكتبة Firebase بيلد جيردل الرئيسي
+        # إضافة كلاس Firebase بيلد جيردل الرئيسي
         if [ -f "$BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
             sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
           fi
         fi
 
-        # تطبيق إضافة الفايربيس في تطبيق أندرويد
+        # تطبيق بلاجن الفايربيس
         if [ -f "$APP_BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms.google-services" "$APP_BUILD_GRADLE"; then
             echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
           fi
         fi
 
-        # إضافة التصاريح وخدمات Firebase لمنع الإغلاق المفاجئ (Crash)
+        # إضافة تصاريح الإشعارات
         if [ -f "$MANIFEST" ]; then
           if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
             sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
           fi
+          if ! grep -q "VIBRATE" "$MANIFEST"; then
+            sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.VIBRATE"/>' "$MANIFEST"
+          fi
 
+          # إضافة خدمة Firebase Messaging Service
           SERVICE_TAG='<service android:name="com.google.firebase.messaging.FirebaseMessagingService" android:exported="false"><intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT"/></intent-filter></service>'
           if ! grep -q "FirebaseMessagingService" "$MANIFEST"; then
             sed -i "/<\/application>/i \        $SERVICE_TAG" "$MANIFEST"
