@@ -18,27 +18,29 @@ jobs:
         node-version: 18
 
     - name: Install dependencies
-      run: |
-        npm install
-        npm install -D @capacitor/assets
+      run: npm install
 
     - name: Prepare Android Project & Assets
       run: |
+        # 1. إضافة أو تحديث منصة أندرويد
         npx cap add android || true
 
-        # 1. نقل ملف Firebase إلى مجلد أندرويد لحل مشكلة الإشعارات
-        mkdir -p android/app
-        cp google-services.json android/app/google-services.json
+        # 2. ضمان وجود الملف داخل android/app بالبحث الشامل في المستودع
+        FOUND_FILE=$(find . -name "google-services.json" | head -n 1)
+        if [ -n "$FOUND_FILE" ]; then
+          mkdir -p android/app
+          cp "$FOUND_FILE" android/app/google-services.json
+          echo "Successfully placed google-services.json in android/app/"
+        fi
 
-        # 2. توليد الأيقونات تلقائياً لحل مشكلة الأيقونة الافتراضية
-        npx @capacitor/assets generate --iconAvailableSource icon-512.png || true
+        # 3. توليد الأيقونات تلقائياً من أيقونة الويب
+        npx @capacitor/assets generate --iconAvailableSource www/icon-192.png || true
 
-        # 3. مزامنة المشروع
+        # 4. مزامنة الملفات مع مشروع أندرويد
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions
       run: |
-        # إضافة إعدادات Firebase في build.gradle
         BUILD_GRADLE="android/build.gradle"
         if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
           sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
@@ -49,7 +51,6 @@ jobs:
           echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
         fi
 
-        # إضافة إذن الإشعارات لأجهزة أندرويد الحديثة
         MANIFEST="android/app/src/main/AndroidManifest.xml"
         if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
           sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
