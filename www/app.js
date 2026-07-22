@@ -1,9 +1,10 @@
-import { PushNotifications } from '@capacitor/push-notifications';
-
-// تسجيل الإشعارات السحابية
+// تسجيل الإشعارات السحابية (FCM)
 async function initPushNotifications(userId) {
   if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
     try {
+      const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+      if (!PushNotifications) return;
+
       // 1. طلب إذن الإشعارات من المستخدم
       let permStatus = await PushNotifications.checkPermissions();
       if (permStatus.receive === 'prompt') {
@@ -18,8 +19,8 @@ async function initPushNotifications(userId) {
       // 3. الحصول على الـ Token وحفظه في Supabase
       PushNotifications.addListener('registration', async (token) => {
         console.log('FCM Token:', token.value);
-        if (userId) {
-          await supabase
+        if (userId && _supabase) {
+          await _supabase
             .from('profiles')
             .update({ fcm_token: token.value })
             .eq('id', userId);
@@ -37,10 +38,7 @@ async function initPushNotifications(userId) {
   }
 }
 
-// تشغيل الوظائف فور فتح التطبيق
-document.addEventListener('DOMContentLoaded', initAppPermissions);
-
-// طلب السماحيات الذكي عند فتح التطبيق
+// طلب السماحيات عند أول فتح للتطبيق
 async function requestAppPermissionsOnFirstLaunch() {
     const hasPrompted = localStorage.getItem('app_permissions_requested_v1');
     if (!hasPrompted) {
@@ -68,7 +66,6 @@ function checkProfanity(text) {
 
 async function triggerNotification(title, body, imageUrl = null) {
     if (document.hidden || currentActivePage !== 'support') {
-        // إذا كان التطبيق يعمل عبر Capacitor في أندرويد
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
             try {
                 await window.Capacitor.Plugins.LocalNotifications.schedule({
@@ -87,7 +84,6 @@ async function triggerNotification(title, body, imageUrl = null) {
                 console.log("LocalNotification Error:", e);
             }
         } 
-        // إذا كان التطبيق يعرض في المتصفح العادي
         else if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
                 body: body,
@@ -410,6 +406,9 @@ async function checkUserSession(uid) {
             document.getElementById('chat-admin-panel').classList.remove('hidden');
             loadAdminPanel();
         }
+
+        // تفعيل الإشعارات للمستخدم
+        await initPushNotifications(uid);
 
         setupChatRealtime();
         setupSupportRealtime();
