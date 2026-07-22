@@ -1,30 +1,41 @@
-// تسجيل الإشعارات السحابية (FCM)
+// (FCM) تسجيل الإشعارات السحابية
 async function initPushNotifications(userId) {
   if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform()) {
     try {
       const PushNotifications = window.Capacitor.Plugins.PushNotifications;
       if (!PushNotifications) return;
 
-      // 1. طلب إذن الإشعارات من المستخدم
-      let permStatus = await PushNotifications.checkPermissions();
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions();
-      }
+      // 1. إزالة المستمعات القديمة لمنع التكرار والـ Crash
+      await PushNotifications.removeAllListeners();
 
-      if (permStatus.receive === 'granted') {
-        // 2. التسجيل لدى FCM
-        await PushNotifications.register();
-      }
-
-      // 3. الحصول على الـ Token وحفظه في Supabase
+      // 2. إعداد مستمع الحصول على الـ Token وتحفظه في Supabase بأمان
       PushNotifications.addListener('registration', async (token) => {
         console.log('FCM Token:', token.value);
-        if (userId && _supabase) {
-          await _supabase
-            .from('profiles')
-            .update({ fcm_token: token.value })
-            .eq('id', userId);
+        try {
+          if (_supabase) {
+            // إن لم يصل userId بشكل صحيح نأخذه من الجلسة الحالية
+            let currentUserId = userId;
+            if (!currentUserId) {
+              const { data: { session } } = await _supabase.auth.getSession();
+              currentUserId = session?.user?.id;
+            }
+
+            if (currentUserId) {
+              await _supabase
+                .from('profiles')
+                .update({ fcm_token: token.value })
+                .eq('id', currentUserId);
+              console.log('FCM token updated successfully!');
+            }
+          }
+        } catch (e) {
+          console.error('Error saving FCM token:', e);
         }
+      });
+
+      // 3. مستمع أخطاء التسجيل
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Push registration error:', error);
       });
 
       // 4. الاستماع للإشعارات في حال كانت الشاشة مفتوحة
@@ -32,8 +43,19 @@ async function initPushNotifications(userId) {
         console.log('Notification received: ', notification);
       });
 
-    } catch (e) {
-      console.error('Error initializing Push Notifications', e);
+      // 5. طلب إذن الإشعارات
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      // 6. التسجيل لدى FCM عند قبول الإذن
+      if (permStatus.receive === 'granted') {
+        await PushNotifications.register();
+      }
+
+    } catch (err) {
+      console.error('Unexpected error in initPushNotifications:', err);
     }
   }
 }
