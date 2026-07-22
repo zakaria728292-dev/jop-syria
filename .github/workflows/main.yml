@@ -22,23 +22,24 @@ jobs:
 
     - name: Prepare Android Project & Assets
       run: |
-        # 1. إضافة أندرويد وتوليد المجلد
-        npx cap add android || true
+        # 1. حذف مجلد android القديم إن وجد لضمان إنشائه بملفات gradlew كاملة
+        rm -rf android
 
-        # 2. ضمان نقل ملف google-services.json إلى المكان الصحيح
+        # 2. إنشاء مشروع أندرويد جديد ونظيف ومكتمل
+        npx cap add android
+
+        # 3. التأكد من وضع ملف google-services.json في مجلد android/app
         mkdir -p android/app
-        if [ ! -f "android/app/google-services.json" ]; then
-          FOUND_FILE=$(find . -name "google-services.json" | head -n 1)
-          if [ -n "$FOUND_FILE" ]; then
-            cp "$FOUND_FILE" android/app/google-services.json
-            echo "Copied google-services.json from $FOUND_FILE"
-          fi
+        FOUND_FILE=$(find . -maxdepth 3 -name "google-services.json" | head -n 1)
+        if [ -n "$FOUND_FILE" ] && [ "$FOUND_FILE" != "./android/app/google-services.json" ]; then
+          cp "$FOUND_FILE" android/app/google-services.json
+          echo "Copied google-services.json from $FOUND_FILE"
         fi
 
-        # 3. توليد الأيقونات
+        # 4. توليد الأيقونات تلقائياً
         npx @capacitor/assets generate --iconAvailableSource www/icon-192.png || true
 
-        # 4. مزامنة المشروع
+        # 5. مزامنة الملفات مع أندرويد
         npx cap sync android
 
     - name: Inject Firebase Gradle & Permissions
@@ -47,18 +48,21 @@ jobs:
         APP_BUILD_GRADLE="android/app/build.gradle"
         MANIFEST="android/app/src/main/AndroidManifest.xml"
 
+        # إضافة كلاس Firebase في build.gradle الرئيسي
         if [ -f "$BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms:google-services" "$BUILD_GRADLE"; then
             sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' "$BUILD_GRADLE"
           fi
         fi
 
+        # تطبيق بلاجن Firebase في app/build.gradle
         if [ -f "$APP_BUILD_GRADLE" ]; then
           if ! grep -q "com.google.gms.google-services" "$APP_BUILD_GRADLE"; then
             echo 'apply plugin: "com.google.gms.google-services"' >> "$APP_BUILD_GRADLE"
           fi
         fi
 
+        # إضافة إذن الإشعارات لأجهزة أندرويد الحديثة
         if [ -f "$MANIFEST" ]; then
           if ! grep -q "POST_NOTIFICATIONS" "$MANIFEST"; then
             sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' "$MANIFEST"
@@ -74,8 +78,6 @@ jobs:
     - name: Build Android APK
       run: |
         cd android
-        # إعادة توليد wrapper مجلد أندرويد الخاص بـ Gradle بشكل متوافق
-        gradle wrapper --gradle-version 8.0.2
         chmod +x gradlew
         ./gradlew assembleDebug
 
