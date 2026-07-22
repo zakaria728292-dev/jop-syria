@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Job Syria</title>
 
+    <!-- إعدادات الألوان والأيقونات المحلية للمتصفح والتطبيق -->
     <meta name="theme-color" content="#121212">
-    <link rel="icon" type="image/png" href="https://i.ibb.co/23cTDk18/1782795963942.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
     <!-- CSS والتصميم الخارجي -->
     <link rel="stylesheet" href="style.css">
@@ -21,8 +23,8 @@
     <h1>JOB SYRIA</h1>
     
     <div id="credentials-inputs">
-        <input type="email" id="email" placeholder="البريد الإلكتروني">
-        <input type="password" id="password" placeholder="كلمة المرور">
+        <input type="email" id="email" placeholder="البريد الإلكتروني" autocomplete="email">
+        <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
         <button id="submit-auth-btn" onclick="submitAuth()">تسجيل الدخول</button>
         <button class="link-btn" id="toggle-auth-btn" onclick="toggleAuthMode()">ليس لديك حساب؟ أنشئ حساباً جديداً</button>
         <button class="link-btn" onclick="forceClearSession()" style="color:red; font-size:11px; margin-top:15px;">تنظيف الكاش وإعادة التعيين 🔄</button>
@@ -66,9 +68,9 @@
         <div class="chat-box" id="support-box"></div>
         <div style="display:flex; gap: 8px; align-items: center;">
             <input type="file" id="image-upload" accept="image/*" class="hidden">
-            <button onclick="document.getElementById('image-upload').click()" style="width: auto; padding: 0 12px; background:#2c2c2c; border: 1px solid #444; color: white;">📷</button>
+            <button type="button" onclick="document.getElementById('image-upload').click()" style="width: auto; padding: 0 12px; background:#2c2c2c; border: 1px solid #444; color: white;">📷</button>
             <input type="text" id="support-msg-text" placeholder="اكتب رسالتك للدعم..." style="margin:0;">
-            <button onclick="sendSupportMessage()" style="width: auto; padding: 0 15px;">إرسال</button>
+            <button type="button" onclick="sendSupportMessage()" style="width: auto; padding: 0 15px;">إرسال</button>
         </div>
     </div>
     
@@ -78,23 +80,23 @@
         
         <div class="referral-section">
             <div style="margin-bottom: 10px;">👥 عدد إحالاتك الناجحة: <strong id="my-referrals-count" style="color: var(--gold);">0</strong></div>
-            <button onclick="copyReferralLink()" style="font-size: 13px; padding: 8px; background-color: #333; color: var(--gold); border: 1px solid var(--gold);">📋 نسخ رابط الإحالة الخاص بي</button>
+            <button type="button" onclick="copyReferralLink()" style="font-size: 13px; padding: 8px; background-color: #333; color: var(--gold); border: 1px solid var(--gold);">📋 نسخ رابط الإحالة الخاص بي</button>
         </div>
 
         <div class="cash-section">
             <label for="syriatel-cash-input">اكتب رمز سيريتل كاش الخاص بك</label>
             <input type="text" id="syriatel-cash-input" placeholder="لا تشارك رقمك هنا حفاظاً على خصوصيتك">
-            <button onclick="updateSyriatelCash()" style="font-size: 13px; padding: 8px;">حفظ رمز كاش</button>
+            <button type="button" onclick="updateSyriatelCash()" style="font-size: 13px; padding: 8px;">حفظ رمز كاش</button>
         </div>
 
         <input type="text" id="new-username" placeholder="تغيير الاسم">
-        <button onclick="updateUsername()">حفظ الاسم الجديد</button>
+        <button type="button" onclick="updateUsername()">حفظ الاسم الجديد</button>
         
-        <a id="contact-mail-link" href="mailto:zakaria728292@gmail.com?subject=تواصل من موظف - Job Syria" style="text-decoration: none;">
-            <button class="btn-contact">📧 تواصل معنا</button>
+        <a id="contact-mail-link" href="mailto:zakaria728292@gmail.com?subject=تواصل من موظف - Job Syria" style="text-decoration: none; display: block;">
+            <button type="button" class="btn-contact">📧 تواصل معنا</button>
         </a>
 
-        <button onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
+        <button type="button" onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
         
         <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
     </div>
