@@ -94,44 +94,48 @@
     </div>
 
 <script>
-    // 🌟 تهيئة وتدقيق الإشعارات مع Capacitor الموبايل 🌟
+    // 🌟 دالة آمنة لمعالجة الإشعارات دون تجميد التطبيق 🌟
     async function initCapacitorNotifications() {
-        if (window.Capacitor && window.Capacitor.Plugins.PushNotifications) {
-            const { PushNotifications } = window.Capacitor.Plugins;
+        try {
+            if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
+                const PushNotifications = window.Capacitor.Plugins.PushNotifications;
 
-            let permStatus = await PushNotifications.checkPermissions();
-            if (permStatus.receive !== 'granted') {
-                permStatus = await PushNotifications.requestPermissions();
-            }
-
-            if (permStatus.receive === 'granted') {
-                await PushNotifications.register();
-            }
-
-            PushNotifications.addListener('registration', async (token) => {
-                if (myProfile && myProfile.id) {
-                    await _supabase.from('profiles').update({ fcm_token: token.value }).eq('id', myProfile.id);
+                let permStatus = await PushNotifications.checkPermissions();
+                if (permStatus.receive !== 'granted') {
+                    permStatus = await PushNotifications.requestPermissions();
                 }
-            });
 
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('Notification received: ', notification);
-            });
+                if (permStatus.receive === 'granted') {
+                    await PushNotifications.register();
+                }
+
+                PushNotifications.addListener('registration', async (token) => {
+                    if (typeof myProfile !== 'undefined' && myProfile && myProfile.id) {
+                        await _supabase.from('profiles').update({ fcm_token: token.value }).eq('id', myProfile.id);
+                    }
+                });
+
+                PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                    console.log('Notification received: ', notification);
+                });
+            }
+        } catch (e) {
+            console.warn('Push Notifications initialization skipped or failed:', e);
         }
     }
 
     // 🌟 تكييف خيارات الدعم وإظهار الرتب ورسالة الإدارة الجماعية 🌟
     async function loadSupportRoomsSelector() {
+        if (typeof _supabase === 'undefined' || typeof myProfile === 'undefined' || !myProfile) return;
         const selector = document.getElementById('support-room-selector');
         const label = document.getElementById('support-select-label');
         const adminControls = document.getElementById('support-admin-controls');
-        if(!selector || !myProfile) return;
+        if(!selector) return;
 
-        // استبدال admin برتبة مشرف
         const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
 
         if (isStaff) {
-            label.innerText = "اختر غرفة العميل/الموظف للرد عليه:";
+            if (label) label.innerText = "اختر غرفة العميل/الموظف للرد عليه:";
             
             if (adminControls) {
                 adminControls.innerHTML = `
@@ -157,22 +161,22 @@
                 const currentSelected = selector.value || activeSupportRoomId || users[0].id;
                 selector.innerHTML = users.map(u => {
                     const userIdClean = String(u.id).trim().toLowerCase();
-                    const activeRoomClean = activeSupportRoomId ? String(activeSupportRoomId).trim().toLowerCase() : '';
+                    const activeRoomClean = typeof activeSupportRoomId !== 'undefined' && activeSupportRoomId ? String(activeSupportRoomId).trim().toLowerCase() : '';
                     const hasUnread = unreadRooms.has(userIdClean) && userIdClean !== activeRoomClean;
                     const dot = hasUnread ? ' 🔴' : '';
                     return `<option value="${u.id}" ${u.id === currentSelected ? 'selected' : ''}>${u.username}${dot}</option>`;
                 }).join('');
                 
-                if(!activeSupportRoomId) { 
+                if(typeof activeSupportRoomId !== 'undefined' && !activeSupportRoomId) { 
                     activeSupportRoomId = currentSelected; 
-                    await markRoomAsRead(activeSupportRoomId);
+                    if (typeof markRoomAsRead === 'function') await markRoomAsRead(activeSupportRoomId);
                 }
             } else {
                 selector.innerHTML = '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
             }
         } else {
             if (adminControls) adminControls.innerHTML = '';
-            label.innerText = "اختر الشخص المسؤول للبدء بالتواصل معه:";
+            if (label) label.innerText = "اختر الشخص المسؤول للبدء بالتواصل معه:";
             
             const { data: staffList } = await _supabase
                 .from('profiles')
@@ -192,7 +196,7 @@
         }
     }
 
-    // 🌟 إرسال رسالة دعم جماعية لكافة الموظفين 🌟
+    // 🌟 إرسال رسالة دعم جماعية 🌟
     async function sendBroadcastSupportMessage() {
         const text = prompt("اكتب الرسالة الجماعية التي تريد إرسالها لجميع الموظفين في الدعم:");
         if (!text || !text.trim()) return;
@@ -215,63 +219,15 @@
         }
     }
 
-    // 🌟 استماع إشعارات الدعم الفني فقط 🌟
-    async function setupSupportRealtime() {
-        const box = document.getElementById('support-box');
-        if(!box || !activeSupportRoomId) return;
-        box.innerHTML = '';
-
-        const isStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(myProfile.role);
-
-        if (currentActivePage === 'support' && activeSupportRoomId === myProfile.id) {
-            await markRoomAsRead(activeSupportRoomId);
-        }
+    // 🌟 تشغيل التطبيق بأمان عند الجاهزية 🌟
+    window.addEventListener('load', () => {
+        // إزالة الفلاتر المخفية لعرض الواجهة فوراً
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('hidden'));
         
-        await loadSupportMessages(activeSupportRoomId);
-
-        _supabase.channel('private_chats_global_channel').unsubscribe();
-        _supabase.channel('private_chats_global_channel')
-            .on('postgres_changes', { event: 'INSERT', table: 'private_chats' }, async p => {
-                const newMsg = p.new;
-                const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
-                
-                if (newMsg.room_id === activeSupportRoomId) {
-                    appendMessage(newMsg, 'support-box');
-                    if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
-                        await markRoomAsRead(activeSupportRoomId);
-                    }
-                }
-
-                // 🔥 إطلاق الإشعارات محصور لشات الدعم الفني فقط 🔥
-                if (newMsg.sender_id !== myProfile.id) {
-                    if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
-                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
-                    } else if (isStaff && !isSenderStaff) {
-                        if (newMsg.room_id !== activeSupportRoomId || document.hidden || currentActivePage !== 'support') {
-                            triggerNotification(`دعم فني من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
-                        }
-                    }
-                }
-            })
-            .subscribe();
-    }
-
-    // 🌟 نظام الإحالة المثبت 🌟
-    function copyReferralLink() {
-        if (!myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار لحين جلب كود الإحالة الخاص بك...');
-        const baseUrl = "https://teal-douhua-036004.netlify.app/"; 
-        const referralLink = `${baseUrl}?ref=${myProfile.referral_code}`;
-        const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(formattedText).then(() => { alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); });
-        } else {
-            prompt("انسخ رابط الإحالة الخاص بك مباشرة من هنا:", formattedText);
-        }
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        initCapacitorNotifications();
+        // تشغيل الإشعارات خلف الكواليس دون تعطيل الشاشة
+        setTimeout(() => {
+            initCapacitorNotifications();
+        }, 1000);
     });
 </script>
 </body>
