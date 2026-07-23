@@ -64,7 +64,7 @@
 <body>
 
     <!-- محتوى الصفحات -->
-    <div id="page-support" class="page hidden">
+    <div id="page-support" class="page">
         <h3>الدعم الفني 🎧</h3>
         <div id="support-admin-controls"></div>
         <label id="support-select-label" style="font-size: 12px; color: #888;"></label>
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <div id="page-settings" class="page hidden">
+    <div id="page-settings" class="page">
         <h3>الإعدادات ⚙️</h3>
         <input type="text" id="new-username" placeholder="الاسم الجديد" style="width: 100%; padding: 8px; margin-bottom: 5px;">
         <button onclick="updateUsername()" style="background: var(--gold); color: #000; width: 100%;">حفظ الاسم الجديد</button>
@@ -94,7 +94,7 @@
     </div>
 
 <script>
-    // 🌟 دالة آمنة لمعالجة الإشعارات دون تجميد التطبيق 🌟
+    // 🌟 تهيئة وتدقيق الإشعارات مع Capacitor الموبايل بأمان 🌟
     async function initCapacitorNotifications() {
         try {
             if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
@@ -110,7 +110,7 @@
                 }
 
                 PushNotifications.addListener('registration', async (token) => {
-                    if (typeof myProfile !== 'undefined' && myProfile && myProfile.id) {
+                    if (typeof myProfile !== 'undefined' && myProfile && myProfile.id && typeof _supabase !== 'undefined') {
                         await _supabase.from('profiles').update({ fcm_token: token.value }).eq('id', myProfile.id);
                     }
                 });
@@ -120,7 +120,7 @@
                 });
             }
         } catch (e) {
-            console.warn('Push Notifications initialization skipped or failed:', e);
+            console.warn('Push Notifications skip:', e);
         }
     }
 
@@ -158,7 +158,7 @@
             } catch (e) {}
 
             if(users && users.length > 0) {
-                const currentSelected = selector.value || activeSupportRoomId || users[0].id;
+                const currentSelected = selector.value || (typeof activeSupportRoomId !== 'undefined' ? activeSupportRoomId : users[0].id);
                 selector.innerHTML = users.map(u => {
                     const userIdClean = String(u.id).trim().toLowerCase();
                     const activeRoomClean = typeof activeSupportRoomId !== 'undefined' && activeSupportRoomId ? String(activeSupportRoomId).trim().toLowerCase() : '';
@@ -188,16 +188,17 @@
                     const displayRole = s.role === 'admin' ? 'مشرف' : s.role;
                     return `<option value="${myProfile.id}">${s.username} (${displayRole})</option>`;
                 }).join('');
-                activeSupportRoomId = myProfile.id;
+                if (typeof activeSupportRoomId !== 'undefined') activeSupportRoomId = myProfile.id;
             } else {
                 selector.innerHTML = `<option value="${myProfile.id}">الإدارة العامة (مدير)</option>`;
-                activeSupportRoomId = myProfile.id;
+                if (typeof activeSupportRoomId !== 'undefined') activeSupportRoomId = myProfile.id;
             }
         }
     }
 
-    // 🌟 إرسال رسالة دعم جماعية 🌟
+    // 🌟 إرسال رسالة دعم جماعية لكافة الموظفين 🌟
     async function sendBroadcastSupportMessage() {
+        if (typeof _supabase === 'undefined' || typeof myProfile === 'undefined') return;
         const text = prompt("اكتب الرسالة الجماعية التي تريد إرسالها لجميع الموظفين في الدعم:");
         if (!text || !text.trim()) return;
 
@@ -219,15 +220,25 @@
         }
     }
 
-    // 🌟 تشغيل التطبيق بأمان عند الجاهزية 🌟
-    window.addEventListener('load', () => {
-        // إزالة الفلاتر المخفية لعرض الواجهة فوراً
-        document.querySelectorAll('.page').forEach(el => el.classList.remove('hidden'));
+    // 🌟 نظام الإحالة المثبت 🌟
+    function copyReferralLink() {
+        if (typeof myProfile === 'undefined' || !myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار لحين جلب كود الإحالة الخاص بك...');
+        const baseUrl = "https://teal-douhua-036004.netlify.app/"; 
+        const referralLink = `${baseUrl}?ref=${myProfile.referral_code}`;
+        const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
         
-        // تشغيل الإشعارات خلف الكواليس دون تعطيل الشاشة
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(formattedText).then(() => { alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); });
+        } else {
+            prompt("انسخ رابط الإحالة الخاص بك مباشرة من هنا:", formattedText);
+        }
+    }
+
+    // 🌟 تشغيل الإشعارات بسلاسة عند التحميل الكامل 🌟
+    window.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             initCapacitorNotifications();
-        }, 1000);
+        }, 800);
     });
 </script>
 </body>
