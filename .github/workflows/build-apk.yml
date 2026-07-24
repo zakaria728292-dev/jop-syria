@@ -22,10 +22,26 @@ jobs:
       run: |
         mkdir -p www
         cp index.html manifest.json sw.js icon-192.png icon-512.png www/ 2>/dev/null || true
+        
+        # تجهيز الأيقونة للأندرويد
+        cp icon-512.png icon.png 2>/dev/null || cp icon-192.png icon.png 2>/dev/null || true
+        
         npm init -y
-        npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
+        npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/push-notifications@5 @capacitor/assets --save-dev
+        
         npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
         npx cap add android
+
+        # توليد أيقونات الأندرويد لجميع الشاشات تلقائياً
+        npx cap-assets generate --android 2>/dev/null || true
+
+    - name: Add Permissions to AndroidManifest
+      run: |
+        # إضافة صلاحية الإشعارات إلى ملف AndroidManifest.xml تلقائياً
+        MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>' $MANIFEST_PATH
+        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.VIBRATE" \/>' $MANIFEST_PATH
+        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>' $MANIFEST_PATH
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4
@@ -35,7 +51,7 @@ jobs:
 
     - name: Sync & Build Android
       run: |
-        npx cap copy
+        npx cap sync android
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
