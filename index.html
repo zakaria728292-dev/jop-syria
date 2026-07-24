@@ -185,7 +185,7 @@
 
 <script>
     let activeContextMenu = null;
-    let latestCapturedFcmToken = ""; // لحفظ آخر توكن تمجلبه لنسخه بسهولة
+    let latestCapturedFcmToken = ""; // لحفظ آخر توكن تم جلبه لنسخه بسهولة
 
     // 🔔 تفعيل طلب إذن الإشعارات فور فتح التطبيق
     if ("Notification" in window) {
@@ -207,7 +207,7 @@
         return false;
     }
 
-    // 🌟 دالة إرسال الإشعار التطبيقي 🌟
+    // 🌟 دالة إرسال الإشعار التطبيقي المحلي 🌟
     async function triggerNotification(title, body, imageUrl = null) {
         if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
@@ -335,7 +335,7 @@
         }
     }
 
-    // دالة زر النسخ الجديد المخصص للتوكن
+    // دالة زر النسخ المخصص للتوكن من شاشة المراقبة
     function copyFcmTokenFromMonitor() {
         if (!latestCapturedFcmToken) {
             alert('لم يتم رصد التوكن بعد، يرجى الانتظار قليلاً حتى يظهر في شاشة المراقبة.');
@@ -371,6 +371,29 @@
         return outputArray;
     }
 
+    // 🌟 حفظ وتحديث التوكن تلقائياً في قاعدة البيانات Supabase Database 🌟
+    async function saveTokenToDatabase(tokenString) {
+        if (!myProfile || !tokenString) return;
+        try {
+            latestCapturedFcmToken = tokenString;
+            
+            const { error } = await _supabase.from('user_notification_tokens').upsert({
+                user_id: myProfile.id,
+                subscription_json: tokenString, 
+                device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+                updated_at: new Date().toISOString()
+            });
+
+            if (error) {
+                log("⚠️ تعذر تحديث جدول التوكنات: " + error.message);
+            } else {
+                log("💾 تم حفظ وتحديث التوكن في قاعدة البيانات بنجاح!");
+            }
+        } catch (e) {
+            log("❌ خطأ أثناء حفظ التوكن بـ Supabase: " + e.message);
+        }
+    }
+
     async function setupPushToken() {
         if (!myProfile || !('serviceWorker' in navigator)) return;
         try {
@@ -387,13 +410,7 @@
             }
             
             const tokenStr = JSON.stringify(sub);
-            latestCapturedFcmToken = tokenStr; // حفظ التوكن للنسخ السريع
-            await _supabase.from('user_notification_tokens').upsert({
-                user_id: myProfile.id,
-                subscription_json: tokenStr, 
-                device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-                updated_at: new Date().toISOString()
-            });
+            await saveTokenToDatabase(tokenStr);
             log("🔔 تم تحديث وربط توكن الإشعارات بنجاح.");
         } catch (e) { log("❌ فشل تفعيل توكن الإشعارات: " + e.message); }
     }
@@ -580,7 +597,6 @@
             
             if(profile.syriatel_cash) { document.getElementById('syriatel-cash-input').value = profile.syriatel_cash; }
 
-            // 🌟 اعتماد رتبة "مشرف" بدلاً من "admin" 🌟
             const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(profile.role);
 
             if (isStaff) {
@@ -607,6 +623,10 @@
             listenToBans(uid);
             loadEmployeeCount(); 
             setupPushToken();
+            
+            if (latestCapturedFcmToken) {
+                await saveTokenToDatabase(latestCapturedFcmToken);
+            }
         } catch(e) { log("❌ خطأ فحص الحساب: " + e.message); }
     }
 
@@ -1045,7 +1065,6 @@
                 const isSupervisor = myProfile.role === 'مشرف';
                 const isTargetEmployee = userRole === 'موظف';
 
-                // 🌟 القائمة المنسدلة للرتب تضم رتبة "مشرف" 🌟
                 const roleSelector = isManager ? `
                     <select onchange="updateUserRole('${emp.id}', this.value)" style="width:auto; padding: 4px; font-size:11px; margin-top:5px; display:inline-block; height: auto; margin-bottom:0; margin-left: 5px;">
                         <option value="موظف" ${userRole === 'موظف' ? 'selected' : ''}>موظف</option>
@@ -1127,7 +1146,7 @@
         else { alert("تم تعديل رتبة المستخدم بنجاح!"); loadAdminPanel(); }
     }
 
-    // إدارة إشعارات Capacitor
+    // إدارة إشعارات Capacitor وتخزينها تلقائياً
     function logToScreen(message) {
         console.log(message);
         const debugBox = document.getElementById('monitor');
@@ -1161,10 +1180,13 @@
                         logToScreen("تم رفض إذن الإشعارات");
                     }
 
-                    PushNotifications.addListener('registration', (token) => {
-                        latestCapturedFcmToken = token.value; // التقاط وتخزين التوكن تلقائياً
+                    PushNotifications.addListener('registration', async (token) => {
+                        latestCapturedFcmToken = token.value;
                         logToScreen("رمز FCM الخاص بالجهاز:");
                         logToScreen(token.value);
+                        
+                        // 🌟 حفظ التوكن من Capacitor تلقائياً عند التسجيل
+                        await saveTokenToDatabase(token.value);
                     });
 
                     PushNotifications.addListener('registrationError', (err) => {
@@ -1176,7 +1198,7 @@
                     });
 
                 } else {
-                    logToScreen("إضافة PushNotifications غير متوفرة");
+                    logToScreen("إضافة PushNotifications غير متوفرة (وضع المتصفح)");
                 }
             } catch (e) {
                 logToScreen("خطأ في النظام: " + e.message);
