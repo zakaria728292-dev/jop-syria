@@ -1104,23 +1104,27 @@
 </script>
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').then((reg) => {
-          console.log('Service Worker Registered Successfully!', reg);
-      }).catch((err) => console.log('Service Worker Registration Failed:', err));
+    document.addEventListener("DOMContentLoaded", async function() {
+      // 1. طلب إذن الإشعارات عبر Capacitor الأصلي للأندرويد
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+        try {
+          let permStatus = await window.Capacitor.Plugins.PushNotifications.checkPermissions();
+          if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+            permStatus = await window.Capacitor.Plugins.PushNotifications.requestPermissions();
+          }
+          if (permStatus.receive === 'granted') {
+            await window.Capacitor.Plugins.PushNotifications.register();
+            console.log("تم منح إذن إشعارات أندرويد بنجاح!");
+          }
+        } catch (e) {
+          console.error("خطأ في طلب إشعارات Capacitor:", e);
+        }
+      } 
+      // 2. خيار احتياطي للمتصفحات العادية
+      else if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
     });
-  }
-    // طلب إذن الإشعارات فور فتح التطبيق
-if ('Notification' in window) {
-  Notification.requestPermission().then(permission => {
-    if (permission === 'granted') {
-      console.log('تم منح إذن الإشعارات');
-    } else {
-      console.log('تم رفض أو حظر الإشعارات');
-    }
-  });
-}
-</script>
+  </script>
 </body>
 </html>
