@@ -18,11 +18,13 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install Capacitor & Dependencies
+    - name: Prepare Web Directory & Install Dependencies
       run: |
+        mkdir -p www
+        cp index.html manifest.json sw.js icon-192.png icon-512.png www/ 2>/dev/null || true
         npm init -y
         npm install @capacitor/core @capacitor/cli @capacitor/android
-        npx cap init "Job Syria" "com.jobsyria.app" --web-dir .
+        npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
         npx cap add android
 
     - name: Setup Java JDK
