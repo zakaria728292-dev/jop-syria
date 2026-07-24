@@ -63,7 +63,7 @@
         .btn-whatsapp:hover { background-color: #1ebc57; }
 
         .btn-contact { background-color: #242424; color: #fff; border: 1px solid #555; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #monitor { width: 100%; max-width: 400px; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; }
+        #monitor { width: 100%; max-width: 400px; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; -webkit-user-select: text; user-select: text; word-break: break-all; }
 
         .admin-chat-controls { display: flex; justify-content: space-between; align-items: center; background: #222; border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
         .chat-status-text { font-size: 12px; font-weight: bold; }
@@ -156,7 +156,14 @@
 
         <button onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
         
-        <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
+        <!-- 🌟 شاشة المراقبة مع زر نسخ التوكن المخصص 🌟 -->
+        <div style="margin-top: 20px;">
+            <div style="font-size: 12px; color: var(--gold); margin-bottom: 5px; font-weight: bold;">معلومات الإشعارات (FCM Token):</div>
+            <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
+            <button type="button" onclick="copyFcmTokenFromMonitor()" style="background-color: #2196F3; color: white; border: none; padding: 10px; border-radius: 6px; margin-top: 8px; width: 100%; font-size: 13px; font-weight: bold; cursor: pointer;">
+                📋 نسخ توكن FCM من شاشة المراقبة
+            </button>
+        </div>
     </div>
     
     <!-- 4️⃣ لوحة التحكم الإدارية للمشرفين والمدراء -->
@@ -178,6 +185,7 @@
 
 <script>
     let activeContextMenu = null;
+    let latestCapturedFcmToken = ""; // لحفظ آخر توكن تمجلبه لنسخه بسهولة
 
     // 🔔 تفعيل طلب إذن الإشعارات فور فتح التطبيق
     if ("Notification" in window) {
@@ -321,7 +329,23 @@
 
     function log(text) {
         const m = document.getElementById('monitor');
-        if (m) { m.innerHTML += "<br>> " + text; m.scrollTop = m.scrollHeight; }
+        if (m) { 
+            m.innerHTML += "<br>> " + text; 
+            m.scrollTop = m.scrollHeight; 
+        }
+    }
+
+    // دالة زر النسخ الجديد المخصص للتوكن
+    function copyFcmTokenFromMonitor() {
+        if (!latestCapturedFcmToken) {
+            alert('لم يتم رصد التوكن بعد، يرجى الانتظار قليلاً حتى يظهر في شاشة المراقبة.');
+            return;
+        }
+        navigator.clipboard.writeText(latestCapturedFcmToken).then(() => {
+            alert('تم نسخ توكن FCM بنجاح! 🎉');
+        }).catch(err => {
+            alert('تعذر النسخ التلقائي، يمكنك تحديده يدوياً من صندوق المراقبة.');
+        });
     }
 
     window.onload = async function() {
@@ -363,6 +387,7 @@
             }
             
             const tokenStr = JSON.stringify(sub);
+            latestCapturedFcmToken = tokenStr; // حفظ التوكن للنسخ السريع
             await _supabase.from('user_notification_tokens').upsert({
                 user_id: myProfile.id,
                 subscription_json: tokenStr, 
@@ -1137,6 +1162,7 @@
                     }
 
                     PushNotifications.addListener('registration', (token) => {
+                        latestCapturedFcmToken = token.value; // التقاط وتخزين التوكن تلقائياً
                         logToScreen("رمز FCM الخاص بالجهاز:");
                         logToScreen(token.value);
                     });
