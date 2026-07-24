@@ -1105,24 +1105,30 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", async function() {
-      // 1. طلب إذن الإشعارات عبر Capacitor الأصلي للأندرويد
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
-        try {
-          let permStatus = await window.Capacitor.Plugins.PushNotifications.checkPermissions();
-          if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
-            permStatus = await window.Capacitor.Plugins.PushNotifications.requestPermissions();
-          }
-          if (permStatus.receive === 'granted') {
-            await window.Capacitor.Plugins.PushNotifications.register();
-            console.log("تم منح إذن إشعارات أندرويد بنجاح!");
-          }
-        } catch (e) {
-          console.error("خطأ في طلب إشعارات Capacitor:", e);
+      // التأكد من العمل داخل بيئة التطبيق وموفر Push Notifications
+      if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
+        const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+
+        //طلب الإذن
+        let permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
         }
-      } 
-      // 2. خيار احتياطي للمتصفحات العادية
-      else if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+
+        if (permStatus.receive === 'granted') {
+          // تسجيل الجهاز في Firebase
+          await PushNotifications.register();
+        }
+
+        // الاستماع لرمز الجهاز (Token) لارسال الإشعارات إليه مستقبلاً
+        PushNotifications.addListener('registration', (token) => {
+          console.log('Firebase Token:', token.value);
+        });
+
+        // الاستماع للإشعارات القادمة والتطبيق مفتوح
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Notification received: ', notification);
+        });
       }
     });
   </script>
