@@ -29,32 +29,35 @@ jobs:
         npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
         npx cap add android
 
-    - name: Set Custom Android Icons
+    - name: Setup Firebase Config
       run: |
-        # اختيار الصورة المتوفرة
+        # نقل ملف google-services.json إلى مسار تطبيق الأندرويد الأصلي
+        if [ -f "google-services.json" ]; then
+          cp google-services.json android/app/google-services.json
+          
+          # إضافة مكوّن google-services لملفات Gradle
+          sed -i "/dependencies {/a \        classpath 'com.google.gms:google-services:4.4.0'" android/build.gradle
+          echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+        fi
+
+    - name: Setup Android Icons
+      run: |
         ICON_SRC="icon-512.png"
         [ -f "$ICON_SRC" ] || ICON_SRC="icon-192.png"
-        
+
         RES_PATH="android/app/src/main/res"
-        
-        # إزالة أيقونات XML التكيفية القديمة لمنع التضارب
-        rm -rf $RES_PATH/mipmap-anydpi-v26/ic_launcher*.xml 2>/dev/null || true
-        
-        # استبدال الصور في كل مجلدات الأيقونات
-        for dir in $RES_PATH/mipmap-*; do
-          if [ -d "$dir" ]; then
-            cp "$ICON_SRC" "$dir/ic_launcher.png" 2>/dev/null || true
-            cp "$ICON_SRC" "$dir/ic_launcher_round.png" 2>/dev/null || true
-            cp "$ICON_SRC" "$dir/ic_launcher_foreground.png" 2>/dev/null || true
-          fi
-        done
+
+        cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher.png" 2>/dev/null || true
+        cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher.png" 2>/dev/null || true
+        cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher.png" 2>/dev/null || true
+        cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" 2>/dev/null || true
+        cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher.png" 2>/dev/null || true
 
     - name: Add Permissions to AndroidManifest
       run: |
         MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>' $MANIFEST_PATH
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.VIBRATE" \/>' $MANIFEST_PATH
-        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" \/>' $MANIFEST_PATH
 
     - name: Setup Java JDK
       uses: actions/setup-java@v4
