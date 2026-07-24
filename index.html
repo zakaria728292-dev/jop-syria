@@ -1101,45 +1101,62 @@
         if (error) alert(error.message);
         else { alert("تم تعديل رتبة المستخدم بنجاح!"); loadAdminPanel(); }
     }
-</script>
 
-<script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      // إعطاء مهلة صغيرة لضمان جاهزية بيئة الكاباسيتور
-      setTimeout(async () => {
-        try {
-          if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
-            const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-
-            let permStatus = await PushNotifications.checkPermissions();
-            if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
-              permStatus = await PushNotifications.requestPermissions();
-            }
-
-            if (permStatus.receive === 'granted') {
-              await PushNotifications.register();
-            }
-
-            PushNotifications.addListener('registration', (token) => {
-              console.log('FCM Token Success:', token.value);
-              // يمكنك هنا حفظ الtoken أو إرساله لسيرفرك
-            });
-
-            PushNotifications.addListener('registrationError', (err) => {
-              console.error('FCM Registration Error: ', JSON.stringify(err));
-            });
-
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-              console.log('Notification received: ', notification);
-            });
-          } else {
-            console.log('PushNotifications plugin not available');
-          }
-        } catch (e) {
-          console.error('Error initializing notifications:', e);
+    // إدارة إشعارات Capacitor
+    function logToScreen(message) {
+        console.log(message);
+        const debugBox = document.getElementById('monitor');
+        if (debugBox) {
+            debugBox.innerHTML += `<br> > ${message}`;
         }
-      }, 1500); // مهلة 1.5 ثانية لضمان استقرار التطبيق عند الفتح
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        setTimeout(async () => {
+            try {
+                if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
+                    const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+
+                    await PushNotifications.createChannel({
+                        id: 'fcm_default_channel',
+                        name: 'Default Channel',
+                        importance: 5,
+                        visibility: 1
+                    });
+
+                    let permStatus = await PushNotifications.checkPermissions();
+                    if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+                        permStatus = await PushNotifications.requestPermissions();
+                    }
+
+                    if (permStatus.receive === 'granted') {
+                        await PushNotifications.register();
+                        logToScreen("تم منح إذن الإشعارات بنجاح");
+                    } else {
+                        logToScreen("تم رفض إذن الإشعارات");
+                    }
+
+                    PushNotifications.addListener('registration', (token) => {
+                        logToScreen("رمز FCM الخاص بالجهاز:");
+                        logToScreen(token.value);
+                    });
+
+                    PushNotifications.addListener('registrationError', (err) => {
+                        logToScreen("خطأ في التسجيل: " + JSON.stringify(err));
+                    });
+
+                    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        logToScreen("وصل إشعار: " + notification.title);
+                    });
+
+                } else {
+                    logToScreen("إضافة PushNotifications غير متوفرة");
+                }
+            } catch (e) {
+                logToScreen("خطأ في النظام: " + e.message);
+            }
+        }, 1500);
     });
-  </script>
+</script>
 </body>
 </html>
