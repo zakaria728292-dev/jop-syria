@@ -29,6 +29,22 @@ jobs:
         npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
         npx cap add android
 
+    - name: Replace Android Launcher Icons
+      run: |
+        # استبدال أيقونات الأندرويد بأيقونة التطبيق المرفقة
+        ICON_SRC="icon-512.png"
+        RES_DIR="android/app/src/main/res"
+        
+        if [ -f "$ICON_SRC" ]; then
+          for dir in $RES_DIR/mipmap*; do
+            if [ -d "$dir" ]; then
+              cp "$ICON_SRC" "$dir/ic_launcher.png" 2>/dev/null || true
+              cp "$ICON_SRC" "$dir/ic_launcher_round.png" 2>/dev/null || true
+              cp "$ICON_SRC" "$dir/ic_launcher_foreground.png" 2>/dev/null || true
+            fi
+          done
+        fi
+
     - name: Add Permissions to AndroidManifest
       run: |
         MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
