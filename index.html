@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Job Syria</title>
+    
+    <!-- 🌟 خصائص تحويل الموقع إلى تطبيق مستقل (PWA / APK Wrapper) 🌟 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    
+    <!-- 🌟 وسوم المعاينة المسبقة 🌟 -->
+    <meta property="og:title" content="Job Syria" />
+    <meta property="og:description" content="تطبيق للعمل اون لاين في سوريا" />
+    <meta property="og:image" content="https://i.ibb.co/23cTDk18/1782795963942.png" />
+    <meta property="og:url" content="https://teal-douhua-036004.netlify.app/" />
+    <meta property="og:type" content="website" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --gold: #D4AF37; --dark-bg: #121212; --card-bg: #1E1E1E; --text-white: #ffffff; --red: #ff3b30; --green: #34c759; --whatsapp-green: #25D366; }
+        body { background-color: var(--dark-bg); color: var(--text-white); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        .container { background-color: var(--card-bg); border: 2px solid var(--gold); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); box-sizing: border-box; }
+        h1 { color: var(--gold); text-align: center; margin-bottom: 24px; letter-spacing: 2px; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 16px; background-color: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; box-sizing: border-box; -webkit-user-select: text; user-select: text; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; }
+        button { width: 100%; padding: 12px; background-color: var(--gold); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #c5a028; }
+        .link-btn { background: none; color: var(--gold); border: none; text-align: center; width: 100%; margin-top: 10px; text-decoration: underline; font-size: 14px; cursor: pointer; }
+        .hidden { display: none !important; }
+        .nav-bar { display: flex; justify-content: space-around; background-color: #1a1a1a; padding: 10px 0; position: fixed; bottom: 0; left: 0; width: 100%; border-top: 1px solid var(--gold); z-index: 1000; }
+        .nav-item { color: #888; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; position: relative; }
+        .nav-item.active { color: var(--gold); }
+        
+        .red-dot { width: 8px; height: 8px; background-color: var(--red); border-radius: 50%; display: inline-block; }
+        .emp-count-box { background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 8px 12px; text-align: center; font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 12px; box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.05); }
+
+        /* صناديق الدردشة */
+        .chat-box { height: 380px; overflow-y: auto; border: 1px solid #333; padding: 10px; margin-bottom: 10px; background: #151515; border-radius: 8px; }
+        .msg { margin-bottom: 10px; padding: 8px; background: #222; border-radius: 6px; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .msg-user { color: var(--gold); font-weight: bold; font-size: 12px; }
+        .msg-green { color: #00ff00 !important; font-weight: bold; font-size: 13px; }
+        .chat-img { max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid #444; cursor: pointer; }
+        
+        .chat-link { color: #3498db !important; text-decoration: underline !important; font-weight: bold; cursor: pointer; -webkit-user-select: auto; user-select: auto; word-break: break-all; display: inline-block; }
+        .chat-link:hover { color: #5dade2 !important; }
+
+        .custom-context-menu { position: fixed; background: #151515; border: 1px solid #333; border-radius: 8px; padding: 6px 0; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 140px; }
+        .context-menu-item { padding: 10px 16px; font-size: 14px; color: rgba(255, 255, 255, 0.7); cursor: pointer; text-align: right; transition: background 0.2s; }
+        .context-menu-item:hover { background: #222; color: #fff; }
+
+        .salary-badge { background: #2c2510; border: 1px solid var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 18px; margin-bottom: 20px; }
+        .referral-section { background: #1a1a1a; border: 1px dashed var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 14px; margin-bottom: 20px; }
+        .admin-card { background: #222; border: 1px solid #333; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
+        
+        .cash-section { border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 20px; background-color: #1a1a1a; }
+        .cash-section label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
+        
+        .btn-whatsapp { background-color: var(--whatsapp-green); color: #fff; font-weight: bold; font-size: 14px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; }
+        .btn-whatsapp:hover { background-color: #1ebc57; }
+
+        .btn-contact { background-color: #242424; color: #fff; border: 1px solid #555; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #monitor { width: 100%; max-width: 400px; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; }
+
+        .admin-chat-controls { display: flex; justify-content: space-between; align-items: center; background: #222; border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+        .chat-status-text { font-size: 12px; font-weight: bold; }
+        .btn-toggle-chat { width: auto; padding: 6px 12px; font-size: 12px; }
+
+        .option-broadcast { background-color: #8b0000 !important; color: #ffffff !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="auth-section" class="container">
+    <h1>JOB SYRIA</h1>
+    
+    <div id="credentials-inputs">
+        <input type="email" id="email" placeholder="البريد الإلكتروني">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button id="submit-auth-btn" onclick="submitAuth()">تسجيل الدخول</button>
+        <button class="link-btn" id="toggle-auth-btn" onclick="toggleAuthMode()">ليس لديك حساب؟ أنشئ حساباً جديداً</button>
+        <button class="link-btn" onclick="forceClearSession()" style="color:red; font-size:11px; margin-top:15px;">تنظيف الكاش وإعادة التعيين 🔄</button>
+    </div>
+    
+    <div id="username-inputs" class="hidden">
+        <p style="text-align:center; font-size:14px; color:#aaa; margin-top:0;">مرحباً بك! يرجى كتابة اسمك المستعار لإتمام حسابك:</p>
+        <input type="text" id="username" placeholder="اكتب اسمك الشخصي هنا (مثال: علي)">
+        <button onclick="saveUsername()">دخول للتطبيق</button>
+    </div>
+</div>
+
+<div id="main-section" class="container hidden" style="margin-bottom: 60px; max-width: 500px;">
+    <h1 style="font-size: 20px;">JOB SYRIA</h1>
+    
+    <!-- 1️⃣ شات الدردشة العامة -->
+    <div id="page-chat" class="page">
+        <div class="emp-count-box">
+            👥 عدد الأعضاء المتواجدين معنا: <span id="employee-online-count">0</span> 
+        </div>
+
+        <div id="chat-admin-panel" class="admin-chat-controls hidden">
+            <span class="chat-status-text">حالة الدردشة العامة: <span id="chat-status-lbl" style="color: var(--green);">مفتوحة</span></span>
+            <button id="toggle-chat-btn" class="btn-toggle-chat" onclick="toggleChatLockState()">قفل الدردشة 🔒</button>
+        </div>
+        
+        <div class="chat-box" id="chat-box"></div>
+        <div style="display:flex; gap: 8px;">
+            <input type="text" id="msg-text" placeholder="اكتب رسالتك..." style="margin:0;" onfocus="checkChatInputFocus()">
+            <button id="send-msg-btn" onclick="sendMessage()" style="width: auto; padding: 0 20px;">إرسال</button>
+        </div>
+    </div>
+
+    <!-- 2️⃣ شات الدعم الفني والمشرفين -->
+    <div id="page-support" class="page hidden">
+        <div id="support-rooms-area" style="margin-bottom: 10px;">
+            <label id="support-selector-label" style="font-size: 11px; color: var(--gold); display: block; margin-bottom: 4px;">اختر المحادثة:</label>
+            <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="padding: 6px; margin: 0 0 10px 0; font-size: 12px;"></select>
+        </div>
+        <div class="chat-box" id="support-box"></div>
+        <div style="display:flex; gap: 8px; align-items: center;">
+            <input type="file" id="image-upload" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('image-upload').click()" style="width: auto; padding: 0 12px; background:#2c2c2c; border: 1px solid #444; color: white;">📷</button>
+            <input type="text" id="support-msg-text" placeholder="اكتب رسالتك للدعم..." style="margin:0;">
+            <button onclick="sendSupportMessage()" style="width: auto; padding: 0 15px;">إرسال</button>
+        </div>
+    </div>
+    
+    <!-- 3️⃣ الإعدادات -->
+    <div id="page-settings" class="page hidden">
+        <div class="salary-badge">💰 راتبك: <span id="my-salary">0</span> ل.س</div>
+        
+        <div class="referral-section">
+            <div style="margin-bottom: 10px;">👥 عدد إحالاتك الناجحة: <strong id="my-referrals-count" style="color: var(--gold);">0</strong></div>
+            <button onclick="copyReferralLink()" style="font-size: 13px; padding: 8px; background-color: #333; color: var(--gold); border: 1px solid var(--gold);">📋 نسخ رابط الإحالة الخاص بي</button>
+        </div>
+
+        <div class="cash-section">
+            <label for="syriatel-cash-input">اكتب رمز سيريتل كاش الخاص بك</label>
+            <input type="text" id="syriatel-cash-input" placeholder="لا تشارك رقمك هنا حفاظاً على خصوصيتك">
+            <button onclick="updateSyriatelCash()" style="font-size: 13px; padding: 8px;">حفظ رمز كاش</button>
+        </div>
+
+        <input type="text" id="new-username" placeholder="تغيير الاسم">
+        <button onclick="updateUsername()">حفظ الاسم الجديد</button>
+        
+        <a href="https://whatsapp.com/channel/0029VbD3iZwI1rcbiOIUjn3z" target="_blank" style="text-decoration: none;">
+            <button class="btn-whatsapp">💬 تابع قناتنا الواتس اب</button>
+        </a>
+
+        <a id="contact-mail-link" href="mailto:zakaria728292@gmail.com?subject=تواصل من موظف - Job Syria" style="text-decoration: none;">
+            <button class="btn-contact">📧 تواصل معنا</button>
+        </a>
+
+        <button onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
+        
+        <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
+    </div>
+    
+    <!-- 4️⃣ لوحة التحكم الإدارية للمشرفين والمدراء -->
+    <div id="page-admin" class="page hidden">
+        <h3>لوحة التحكم الإدارية المالية</h3>
+        <div id="employees-list"></div>
+    </div>
+    
+    <!-- الشريط السفلي -->
+    <div class="nav-bar">
+        <div class="nav-item active" id="nav-chat" onclick="switchPage('chat')">الدردشة</div>
+        <div class="nav-item" id="nav-support" onclick="switchPage('support')">
+            الدعم <span id="support-badge" class="red-dot hidden"></span>
+        </div>
+        <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">الإعدادات</div>
+        <div class="nav-item hidden" id="nav-admin" onclick="switchPage('admin')">الموظفين</div>
+    </div>
+</div>
+
+<script>
+    let activeContextMenu = null;
+
+    // 🔔 تفعيل طلب إذن الإشعارات فور فتح التطبيق
+    if ("Notification" in window) {
+        if (Notification.permission === "default") {
+            Notification.requestPermission().then(permission => {
+                if(permission === "granted") {
+                    setupPushToken();
+                }
+            });
+        }
+    }
+
+    const bannedWords = ["كلب", "سني", "صنة", "ندل", "حيوان", "علوي", "ابو بكر", "بكر", "بكري", "شرموط", "شرموطة", "عاهرة"];
+    function checkProfanity(text) {
+        const lowerText = text.toLowerCase();
+        for (let word of bannedWords) {
+            if (lowerText.includes(word)) { return true; }
+        }
+        return false;
+    }
+
+    // 🌟 دالة إرسال الإشعار التطبيقي 🌟
+    async function triggerNotification(title, body, imageUrl = null) {
+        if ("Notification" in window && Notification.permission === "granted") {
+            const notificationOptions = {
+                body: body,
+                icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
+                badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
+                image: imageUrl ? imageUrl : undefined,
+                vibrate: [200, 100, 200]
+            };
+
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    reg.showNotification(title, notificationOptions);
+                } catch (e) {
+                    new Notification(title, { body: body, icon: notificationOptions.icon });
+                }
+            } else {
+                new Notification(title, { body: body, icon: notificationOptions.icon });
+            }
+        }
+    }
+
+    function linkify(text) {
+        if (!text) return '';
+        const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        const wwwPattern = /(^|[^\/])(www\.[\S]+(\b|$))/g;
+        
+        let html = text;
+        html = html.replace(urlPattern, function(match) {
+            return `<a href="${match}" target="_blank" rel="noopener noreferrer" class="chat-link" onclick="event.stopPropagation();">${match}</a>`;
+        });
+        html = html.replace(wwwPattern, function(match, p1, p2) {
+            return `${p1}<a href="http://${p2}" target="_blank" rel="noopener noreferrer" class="chat-link" onclick="event.stopPropagation();">${p2}</a>`;
+        });
+        return html;
+    }
+
+    function attachLongPressListener(element, textToCopy) {
+        let pressTimer;
+        const startPress = (e) => {
+            if (e.type === "click" || (e.touches && e.touches.length > 1)) return;
+            pressTimer = setTimeout(() => {
+                if (navigator.vibrate) { navigator.vibrate(50); }
+                showCustomContextMenu(e, textToCopy);
+            }, 1000); 
+        };
+        const cancelPress = () => { clearTimeout(pressTimer); };
+
+        element.addEventListener("touchstart", startPress, { passive: true });
+        element.addEventListener("touchend", cancelPress);
+        element.addEventListener("touchmove", cancelPress);
+        element.addEventListener("mousedown", startPress);
+        element.addEventListener("mouseup", cancelPress);
+        element.addEventListener("mouseleave", cancelPress);
+    }
+
+    function showCustomContextMenu(e, text) {
+        e.preventDefault();
+        removeContextMenu();
+
+        const menu = document.createElement("div");
+        menu.className = "custom-context-menu";
+        
+        const item = document.createElement("div");
+        item.className = "context-menu-item";
+        item.innerText = "نسخ الرسالة";
+        item.onclick = () => {
+            navigator.clipboard.writeText(text).then(() => { alert("تم نسخ نص الرسالة بنجاح!"); });
+            removeContextMenu();
+        };
+
+        menu.appendChild(item);
+        document.body.appendChild(menu);
+
+        let posX = e.pageX || (e.touches ? e.touches[0].pageX : 0);
+        let posY = e.pageY || (e.touches ? e.touches[0].pageY : 0);
+
+        menu.style.left = `${posX}px`;
+        menu.style.top = `${posY}px`;
+
+        activeContextMenu = menu;
+        setTimeout(() => { document.addEventListener("click", removeContextMenuOutside); }, 10);
+    }
+
+    function removeContextMenu() {
+        if (activeContextMenu) {
+            activeContextMenu.remove();
+            activeContextMenu = null;
+        }
+        document.removeEventListener("click", removeContextMenuOutside);
+    }
+
+    function removeContextMenuOutside(e) {
+        if (activeContextMenu && !activeContextMenu.contains(e.target)) {
+            removeContextMenu();
+        }
+    }
+
+    function generateReferralCode(username) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let randomString = '';
+        for (let i = 0; i < 4; i++) { randomString += chars.charAt(Math.floor(Math.random() * chars.length)); }
+        const cleanUsername = username.replace(/\s+/g, '').substring(0, 3).toLowerCase();
+        return `${cleanUsername}-${randomString}`;
+    }
+
+    const supabaseUrl = 'https://penavltenjklmpovdgcm.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlbmF2bHRlbmprbG1wb3ZkZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODcxNTQsImV4cCI6MjA5OTQ2MzE1NH0.IchDJ9w3UDF1nxZwvoGacxB6O_hdDOgpcKfTM39mrd4';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    let isSignUp = false;
+    let myProfile = null;
+    let isSavingUser = false;
+    let isChatLocked = false;
+    let activeSupportRoomId = null;
+    let currentActivePage = 'chat'; 
+    let tempUserDataAfterSignUp = null; 
+
+    function log(text) {
+        const m = document.getElementById('monitor');
+        if (m) { m.innerHTML += "<br>> " + text; m.scrollTop = m.scrollHeight; }
+    }
+
+    window.onload = async function() {
+        log("بدء تشغيل التطبيق وفحص الجلسة...");
+        checkReferralInURL();
+
+        try {
+            const { data, error } = await _supabase.auth.getSession();
+            if (error) { log("خطأ جلسة: " + error.message); return; }
+            if (data && data.session) {
+                log("تم العثور على جلسة نشطة.");
+                checkUserSession(data.session.user.id);
+            } else { log("لا توجد جلسة معلقة."); }
+        } catch (e) { log("خطأ بالإقلاع: " + e.message); }
+    };
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+        return outputArray;
+    }
+
+    async function setupPushToken() {
+        if (!myProfile || !('serviceWorker' in navigator)) return;
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            if (!reg.pushManager) return;
+            
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+                const publicKeyStr = 'BIP3iY0ubmTuSkHHitbti3-noZBUZKztt9bZv9qbS2c6kpqpLkisNJWgN87MAZ9amSI0_GnpyfqY767Mt9B1W4';
+                sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicKeyStr)
+                });
+            }
+            
+            const tokenStr = JSON.stringify(sub);
+            await _supabase.from('user_notification_tokens').upsert({
+                user_id: myProfile.id,
+                subscription_json: tokenStr, 
+                device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+                updated_at: new Date().toISOString()
+            });
+            log("🔔 تم تحديث وربط توكن الإشعارات بنجاح.");
+        } catch (e) { log("❌ فشل تفعيل توكن الإشعارات: " + e.message); }
+    }
+
+    function checkReferralInURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        if (refCode) {
+            localStorage.setItem('referred_by', refCode.trim());
+            log("🔗 تم حفظ كود إحالة: " + refCode);
+        }
+    }
+
+    function forceClearSession() {
+        localStorage.clear();
+        _supabase.auth.signOut();
+        log("تم تنظيف الكاش.");
+        setTimeout(() => { location.reload(); }, 300);
+    }
+
+    function toggleAuthMode() {
+        isSignUp = !isSignUp;
+        document.getElementById('submit-auth-btn').innerText = isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+        document.getElementById('toggle-auth-btn').innerText = isSignUp ? 'لديك حساب؟ سجل دخولك' : 'ليس لديك حساب؟ أنشئ حساباً جديداً';
+    }
+
+    async function submitAuth() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        if(!email || !password) return alert('الرجاء كتابة البريد وكلمة المرور');
+        if (password.length < 8) { return alert("عذراً، يجب أن تتكون كلمة المرور من 8 خانات أو أكثر"); }
+        
+        try {
+            if(isSignUp) {
+                const { data, error } = await _supabase.auth.signUp({ email, password });
+                if(error) { alert(error.message); return; }
+                
+                if (data && data.user) {
+                    tempUserDataAfterSignUp = data.user;
+                    await _supabase.auth.signInWithPassword({ email, password });
+                    document.getElementById('credentials-inputs').classList.add('hidden');
+                    document.getElementById('username-inputs').classList.remove('hidden');
+                }
+            } else {
+                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+                if(error) { alert(error.message); return; }
+                checkUserSession(data.user.id);
+            }
+        } catch (e) { log("❌ خطأ: " + e.message); }
+    }
+
+    async function saveUsername() {
+        if (isSavingUser) return;
+        const username = document.getElementById('username').value.trim();
+        if(!username) return alert('الرجاء كتابة اسم مستعار');
+        
+        try {
+            isSavingUser = true;
+            const { data: existingUser } = await _supabase.from('profiles').select('username').eq('username', username).maybeSingle();
+
+            if (existingUser) {
+                alert("عذرا هذا الإسم محجوز بالفعل");
+                isSavingUser = false;
+                return;
+            }
+            
+            let currentUser = null;
+            const { data: sessionData } = await _supabase.auth.getUser();
+            if (sessionData && sessionData.user) {
+                currentUser = sessionData.user;
+            } else if (tempUserDataAfterSignUp) {
+                currentUser = tempUserDataAfterSignUp;
+            }
+
+            if (!currentUser) {
+                alert("حدث خطأ في صلاحية الجلسة، يرجى إعادة تسجيل الدخول لتأكيد الاسم الشخصي.");
+                forceClearSession();
+                return;
+            }
+
+            const myReferralCode = generateReferralCode(username);
+            const invitedBy = localStorage.getItem('referred_by') || null;
+            localStorage.removeItem('referred_by');
+            
+            const { error } = await _supabase.from('profiles').upsert({ 
+                id: currentUser.id, username: username, email: currentUser.email,
+                role: 'موظف', is_banned: false, referral_code: myReferralCode,
+                referred_by: invitedBy, referral_count: 0, salary: 0, syriatel_cash: ''
+            });
+            
+            if(error) { alert(error.message); isSavingUser = false; return; }
+
+            const welcomeMessage = `أهلاً بكم في تطبيق [ job syria ] \n\nشارك التطبيق من خلال رابط الإحالة الخاص بك "ستجده في قائمة الإعدادات" \n\nواكسب جوائز ستضاف الى راتبك على كل احالة\n\n^لستم ملزمون بوقت عمل محدد ^`;
+            
+            await _supabase.from('private_chats').insert({
+                sender_id: 'f81b4a91-2416-4c7d-b095-c1cdd9fa6a47', 
+                sender_name: 'Team leader',
+                username: 'Team leader',
+                message_text: welcomeMessage,
+                role: 'مدير', 
+                room_id: currentUser.id, 
+                is_read: false 
+            });
+
+            if (invitedBy) { await processReferralReward(invitedBy); }
+            
+            tempUserDataAfterSignUp = null;
+            checkUserSession(currentUser.id);
+        } catch (e) { log("❌ خطأ بحفظ الاسم: " + e.message); } 
+        finally { isSavingUser = false; }
+    }
+
+    async function processReferralReward(refCode) {
+        try {
+            log("🔄 جاري معالجة مكافأة الإحالة للكود: " + refCode);
+            const rewardAmount = 2500;
+            const { error: rpcError } = await _supabase.rpc('add_referral_reward', { ref_code: refCode, reward_amount: rewardAmount });
+
+            if (!rpcError) { log("✅ تمت إضافة مكافأة الإحالة بنجاح!"); return; }
+
+            const { data: inviter, error } = await _supabase.from('profiles').select('id, salary, referral_count').eq('referral_code', refCode).maybeSingle();
+            if (error) return;
+
+            if (inviter) {
+                const newSalary = (parseFloat(inviter.salary) || 0) + rewardAmount;
+                const newCount = (parseInt(inviter.referral_count) || 0) + 1;
+                await _supabase.from('profiles').update({ salary: newSalary, referral_count: newCount }).eq('id', inviter.id);
+            }
+        } catch (err) { log("❌ خطأ بنظام الإحالة: " + err.message); }
+    }
+
+    async function loadEmployeeCount() {
+        try {
+            const { count, error } = await _supabase.from('profiles').select('*', { count: 'exact', head: true });
+            if (!error && count !== null) { document.getElementById('employee-online-count').innerText = count; }
+        } catch(e) {}
+    }
+
+    async function checkUnreadSupportNotification(uid) {
+        if (!uid) return;
+        try {
+            const cleanUid = String(uid).trim().toLowerCase();
+            const { data: unreadSupportMsgs } = await _supabase.from('private_chats').select('id').eq('room_id', cleanUid).eq('is_read', false).neq('sender_id', cleanUid).limit(1);
+            const badge = document.getElementById('support-badge');
+            if (unreadSupportMsgs && unreadSupportMsgs.length > 0) {
+                if (badge) badge.classList.remove('hidden');
+            } else {
+                if (badge) badge.classList.add('hidden');
+            }
+        } catch (err) {}
+    }
+
+    async function checkUserSession(uid) {
+        try {
+            let { data: profile, error } = await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
+            if(error) return;
+
+            if(!profile) {
+                document.getElementById('credentials-inputs').classList.add('hidden');
+                document.getElementById('username-inputs').classList.remove('hidden');
+                return;
+            }
+
+            if (profile.is_banned) {
+                alert("تم حظر حسابك من دخول التطبيق من قبل الإدارة!");
+                forceClearSession();
+                return;
+            }
+
+            if (!profile.referral_code) {
+                const newGeneratedCode = generateReferralCode(profile.username);
+                await _supabase.from('profiles').update({ referral_code: newGeneratedCode, referral_count: 0 }).eq('id', uid);
+                const { data: updatedProfile } = await _supabase.from('profiles').select().eq('id', uid).single();
+                profile = updatedProfile;
+            }
+            
+            myProfile = profile;
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-section').classList.remove('hidden');
+            
+            document.getElementById('my-salary').innerText = profile.salary || 0;
+            document.getElementById('my-referrals-count').innerText = profile.referral_count || 0;
+            document.getElementById('new-username').value = profile.username;
+            
+            if(profile.syriatel_cash) { document.getElementById('syriatel-cash-input').value = profile.syriatel_cash; }
+
+            // 🌟 اعتماد رتبة "مشرف" بدلاً من "admin" 🌟
+            const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(profile.role);
+
+            if (isStaff) {
+                const { data: unreadForAdmin } = await _supabase.from('private_chats').select('id').eq('is_read', false).neq('role', 'مدير').neq('role', 'مشرف').neq('role', 'مدير مالي').limit(1);
+                if (unreadForAdmin && unreadForAdmin.length > 0) {
+                    document.getElementById('support-badge').classList.remove('hidden');
+                }
+            } else {
+                activeSupportRoomId = myProfile.id; 
+                await checkUnreadSupportNotification(myProfile.id);
+            }
+
+            if(isStaff) {
+                document.getElementById('chat-admin-panel').classList.remove('hidden');
+                document.getElementById('nav-admin').classList.remove('hidden');
+                loadAdminPanel();
+            }
+
+            await loadSupportRoomsSelector();
+
+            setupChatRealtime();
+            setupSupportRealtime();
+            listenToChatSettings();
+            listenToBans(uid);
+            loadEmployeeCount(); 
+            setupPushToken();
+        } catch(e) { log("❌ خطأ فحص الحساب: " + e.message); }
+    }
+
+    function listenToBans(uid) {
+        _supabase.channel('my_ban_status')
+            .on('postgres_changes', { event: 'UPDATE', table: 'profiles', filter: `id=eq.${uid}` }, payload => {
+                if (payload.new.is_banned) {
+                    alert("تم حظر حسابك الآن من قبل الإدارة!");
+                    forceClearSession();
+                }
+            }).subscribe();
+    }
+
+    async function listenToChatSettings() {
+        try {
+            const { data } = await _supabase.from('system_settings').select().eq('key', 'chat_locked').maybeSingle();
+            if (data) { applyChatLockState(data.value === 'true'); }
+        } catch (e) {}
+
+        _supabase.channel('sys_settings')
+            .on('postgres_changes', { event: 'UPDATE', table: 'system_settings', filter: 'key=eq.chat_locked' }, payload => {
+                applyChatLockState(payload.new.value === 'true');
+            }).subscribe();
+    }
+
+    function applyChatLockState(locked) {
+        isChatLocked = locked;
+        const statusLbl = document.getElementById('chat-status-lbl');
+        const toggleBtn = document.getElementById('toggle-chat-btn');
+        const inputField = document.getElementById('msg-text');
+        const sendBtn = document.getElementById('send-msg-btn');
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile?.role);
+
+        if(locked) {
+            if(statusLbl) { statusLbl.innerText = "مغلقة 🔒"; statusLbl.style.color = "var(--red)"; }
+            if(toggleBtn) toggleBtn.innerText = "فتح الدردشة 🔓";
+            if(!isStaff) {
+                inputField.disabled = true;
+                inputField.placeholder = "الدردشة مغلقة مؤقتاً من قبل الإدارة";
+                sendBtn.disabled = true;
+            }
+        } else {
+            if(statusLbl) { statusLbl.innerText = "مفتوحة 🔓"; statusLbl.style.color = "var(--green)"; }
+            if(toggleBtn) toggleBtn.innerText = "قفل الدردشة 🔒";
+            inputField.disabled = false;
+            inputField.placeholder = "اكتب رسالتك...";
+            sendBtn.disabled = false;
+        }
+    }
+
+    function checkChatInputFocus() {
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile?.role);
+        if (isChatLocked && !isStaff) {
+            alert("عذرا تم قفل الدردشة مؤقتاً من قبل المسؤول");
+            document.getElementById('msg-text').blur(); 
+        }
+    }
+
+    async function toggleChatLockState() {
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile?.role);
+        if (!isStaff) return alert("عذراً، تملك الإدارة فقط صلاحية تغيير حالة الدردشة!");
+
+        const newState = !isChatLocked;
+        try {
+            const { error } = await _supabase.from('system_settings').update({ value: newState.toString() }).eq('key', 'chat_locked');
+            if (error) { await _supabase.from('system_settings').upsert({ key: 'chat_locked', value: newState.toString() }); }
+            applyChatLockState(newState);
+        } catch (e) { applyChatLockState(newState); }
+    }
+
+    async function updateSyriatelCash() {
+        if(!myProfile) return alert("الرجاء تسجيل الدخول أولاً");
+        const cashCode = document.getElementById('syriatel-cash-input').value.trim();
+        const { error } = await _supabase.from('profiles').update({ syriatel_cash: cashCode }).eq('id', myProfile.id);
+        if(error) alert(error.message);
+        else { alert("تم حفظ الرمز بنجاح! 🎉"); myProfile.syriatel_cash = cashCode; }
+    }
+
+    function copyReferralLink() {
+        if (!myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار...');
+        const referralLink = `${window.location.origin}${window.location.pathname}?ref=${myProfile.referral_code}`;
+        const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
+        navigator.clipboard.writeText(formattedText).then(() => { alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); });
+    }
+
+    function switchPage(p) {
+        currentActivePage = p; 
+        document.querySelectorAll('.page').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(`page-${p}`).classList.remove('hidden');
+        document.getElementById(`nav-${p}`).classList.add('active');
+        
+        if (p === 'support') {
+            document.getElementById('support-badge').classList.add('hidden');
+            if (myProfile && !['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role)) {
+                markRoomAsRead(myProfile.id);
+            }
+        }
+    }
+
+    async function sendMessage() {
+        const text = document.getElementById('msg-text').value.trim();
+        if(!text) return;
+        if (checkProfanity(text)) { return alert("تعذر الإرسال: تحتوي الرسالة على كلمات غير لائقة!"); }
+
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+        if (isChatLocked && !isStaff) { return alert("عذراً، الشات مغلق حالياً من قبل الإدارة."); }
+
+        await _supabase.from('messages').insert({ user_id: myProfile.id, username: myProfile.username, message_text: text, role: myProfile.role });
+        document.getElementById('msg-text').value = '';
+    }
+
+    function setupChatRealtime() {
+        document.getElementById('chat-box').innerHTML = '';
+        _supabase.from('messages').select().order('created_at').then(({ data }) => {
+            if(data) data.forEach(msg => appendMessage(msg, 'chat-box'));
+        });
+        _supabase.channel('msgs').on('postgres_changes', { event: 'INSERT', table: 'messages' }, p => {
+            appendMessage(p.new, 'chat-box');
+        }).subscribe();
+
+        _supabase.channel('profiles_counter').on('postgres_changes', { event: '*', table: 'profiles' }, () => {
+            loadEmployeeCount();
+        }).subscribe();
+    }
+
+    async function markRoomAsRead(roomId) {
+        if(!roomId || !myProfile) return;
+        try {
+            await _supabase.from('private_chats').update({ is_read: true }).eq('room_id', roomId).eq('is_read', false).neq('sender_id', myProfile.id);
+        } catch (e) {}
+    }
+
+    async function loadSupportRoomsSelector() {
+        const selector = document.getElementById('support-room-selector');
+        const label = document.getElementById('support-selector-label');
+        if(!selector || !myProfile) return;
+
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+
+        if (isStaff) {
+            if(label) label.innerText = "اختر غرفة العميل أو الإرسال الجماعي:";
+            const { data: users } = await _supabase.from('profiles').select('id, username').eq('role', 'موظف');
+            
+            let unreadRooms = new Set();
+            try {
+                const { data: unreadData } = await _supabase.from('private_chats').select('room_id, sender_id').eq('is_read', false);
+                if (unreadData) {
+                    unreadData.forEach(msg => {
+                        const rId = String(msg.room_id).trim().toLowerCase();
+                        const sId = String(msg.sender_id).trim().toLowerCase();
+                        if (sId === rId) unreadRooms.add(rId);
+                    });
+                }
+            } catch (e) {}
+
+            let broadcastOptionHtml = `<option value="broadcast_all" class="option-broadcast">📢 رسالة جماعية لكل المستخدمين</option>`;
+            
+            if(users && users.length > 0) {
+                const currentSelected = activeSupportRoomId || users[0].id;
+                const userOptionsHtml = users.map(u => {
+                    const userIdClean = String(u.id).trim().toLowerCase();
+                    const activeRoomClean = activeSupportRoomId ? String(activeSupportRoomId).trim().toLowerCase() : '';
+                    const hasUnread = unreadRooms.has(userIdClean) && userIdClean !== activeRoomClean;
+                    const dot = hasUnread ? ' 🔴' : '';
+                    return `<option value="${u.id}" ${u.id === currentSelected ? 'selected' : ''}>${u.username}${dot}</option>`;
+                }).join('');
+
+                selector.innerHTML = broadcastOptionHtml + userOptionsHtml;
+                
+                if(!activeSupportRoomId) { 
+                    activeSupportRoomId = currentSelected; 
+                    if(activeSupportRoomId !== 'broadcast_all') {
+                        await markRoomAsRead(activeSupportRoomId);
+                    }
+                }
+            } else {
+                selector.innerHTML = broadcastOptionHtml + '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
+            }
+        } else {
+            if(label) label.innerText = "اختر المسؤول الذي ترغب بالتحدث معه:";
+            const { data: admins } = await _supabase.from('profiles').select('id, username, role').in('role', ['مدير', 'مشرف', 'مدير مالي']);
+            const savedSelectedAdmin = selector.value;
+
+            if(admins && admins.length > 0) {
+                selector.innerHTML = admins.map(a => {
+                    const isSelected = savedSelectedAdmin ? (savedSelectedAdmin === a.id) : false;
+                    return `<option value="${a.id}" ${isSelected ? 'selected' : ''}>${a.username} (${a.role})</option>`;
+                }).join('');
+                if (!activeSupportRoomId || activeSupportRoomId === myProfile.id) {
+                    activeSupportRoomId = myProfile.id;
+                }
+            } else {
+                selector.innerHTML = `<option value="${myProfile.id}">فريق الدعم الفني</option>`;
+                activeSupportRoomId = myProfile.id;
+            }
+        }
+    }
+
+    async function changeSupportActiveRoom(roomId) {
+        activeSupportRoomId = roomId;
+        if (activeSupportRoomId !== 'broadcast_all') {
+            await markRoomAsRead(roomId);
+        }
+        await loadSupportMessages(activeSupportRoomId);
+    }
+
+    async function sendSupportMessage() {
+        const text = document.getElementById('support-msg-text').value.trim();
+        if(!text) return;
+        if (checkProfanity(text)) { return alert("تعذر الإرسال: تحتوي الرسالة على كلمات غير لائقة!"); }
+        if(!activeSupportRoomId) { return alert("عذراً، لم يتم تحديد غرفة دعم نشطة بعد!"); }
+
+        if (activeSupportRoomId === 'broadcast_all') {
+            const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+            if (!isStaff) return alert("عذراً، لا تملك صلاحية الإرسال الجماعي!");
+
+            if (!confirm("هل أنت متأكد من إرسال هذه الرسالة الجماعية لكافة مستخدمين التطبيق؟")) return;
+
+            const { data: users } = await _supabase.from('profiles').select('id');
+            if (users && users.length > 0) {
+                const msgsToInsert = users.map(u => ({
+                    sender_id: myProfile.id,
+                    sender_name: myProfile.username,
+                    username: myProfile.username,
+                    message_text: `📢 [رسالة جماعية من الإدارة]:\n${text}`,
+                    role: myProfile.role,
+                    room_id: u.id,
+                    is_read: false
+                }));
+
+                const { error } = await _supabase.from('private_chats').insert(msgsToInsert);
+                if (error) { alert("خطأ أثناء إرسال الرسالة الجماعية: " + error.message); } 
+                else {
+                    alert("تم إرسال الرسالة الجماعية بنجاح إلى جميع المستلمين! 🎉");
+                    document.getElementById('support-msg-text').value = '';
+                }
+            }
+            return;
+        }
+
+        await _supabase.from('private_chats').insert({ 
+            sender_id: myProfile.id, 
+            sender_name: myProfile.username, 
+            username: myProfile.username, 
+            message_text: text, 
+            role: myProfile.role,
+            room_id: activeSupportRoomId,
+            is_read: false
+        });
+        document.getElementById('support-msg-text').value = '';
+    }
+
+    document.getElementById('image-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if(!file || !myProfile || !activeSupportRoomId) return;
+
+        if (activeSupportRoomId === 'broadcast_all') {
+            return alert("عذراً، رفع الصور غير متاح في خيار الرسائل الجماعية.");
+        }
+        
+        log("جاري رفع الصورة...");
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await _supabase.storage.from('chat-media').upload(`private/${fileName}`, file);
+        if(uploadError) return alert("خطأ في رفع الصورة: " + uploadError.message);
+
+        const { data } = _supabase.storage.from('chat-media').getPublicUrl(`private/${fileName}`);
+        
+        await _supabase.from('private_chats').insert({
+            sender_id: myProfile.id,
+            sender_name: myProfile.username,
+            username: myProfile.username,
+            image_url: data.publicUrl,
+            role: myProfile.role,
+            room_id: activeSupportRoomId,
+            is_read: false
+        });
+    });
+
+    async function loadSupportMessages(roomId) {
+        const box = document.getElementById('support-box');
+        if(!box || !roomId) return;
+        
+        if (roomId === 'broadcast_all') {
+            box.innerHTML = `<div style="text-align: center; color: var(--gold); padding: 20px; font-size: 13px;">📢 أنت في وضع الإرسال الجماعي.<br>أي رسالة تقوم بكتابتها هنا وإرسالها ستصل مباشرة إلى محادثات جميع مستخدمين التطبيق.</div>`;
+            return;
+        }
+
+        let { data } = await _supabase.from('private_chats').select('*').eq('room_id', roomId).order('created_at');
+        box.innerHTML = '';
+        if(data) { data.forEach(msg => appendMessage(msg, 'support-box')); }
+    }
+
+    async function setupSupportRealtime() {
+        const box = document.getElementById('support-box');
+        if(!box || !activeSupportRoomId) return;
+
+        const isStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(myProfile.role);
+
+        if (currentActivePage === 'support' && activeSupportRoomId === myProfile.id) {
+            await markRoomAsRead(activeSupportRoomId);
+        }
+        
+        await loadSupportMessages(activeSupportRoomId);
+
+        _supabase.channel('private_chats_global_channel').unsubscribe();
+
+        _supabase.channel('private_chats_global_channel')
+            .on('postgres_changes', { event: 'INSERT', table: 'private_chats' }, async p => {
+                const newMsg = p.new;
+                const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
+                
+                if (newMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
+                    appendMessage(newMsg, 'support-box');
+                    if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
+                        await markRoomAsRead(activeSupportRoomId);
+                    }
+                } 
+
+                if (newMsg.sender_id !== myProfile.id) {
+                    if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
+                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                    }
+                    else if (isStaff && !isSenderStaff) {
+                        if (newMsg.room_id !== activeSupportRoomId || document.hidden) {
+                            triggerNotification(`دعم فني من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                        }
+                    }
+                }
+
+                if (newMsg.sender_id !== myProfile.id) {
+                    if (isStaff && newMsg.room_id !== activeSupportRoomId && !isSenderStaff) {
+                        document.getElementById('support-badge').classList.remove('hidden');
+                        await loadSupportRoomsSelector();
+                    } else if (!isStaff && newMsg.room_id === myProfile.id && currentActivePage !== 'support') {
+                        document.getElementById('support-badge').classList.remove('hidden');
+                    }
+                }
+            })
+            .on('postgres_changes', { event: 'UPDATE', table: 'private_chats' }, async p => {
+                const updatedMsg = p.new;
+                if (updatedMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
+                    await loadSupportMessages(activeSupportRoomId);
+                }
+            })
+            .subscribe();
+    }
+
+    function appendMessage(msg, boxId) {
+        const box = document.getElementById(boxId);
+        if(box) {
+            const isGreenRole = msg.username === "Team leader" || msg.sender_name === "Team leader" || msg.role === "مدير" || msg.role === "مشرف" || msg.role === "مدير مالي";
+            const userClass = isGreenRole ? "msg-user msg-green" : "msg-user";
+            
+            const textRaw = msg.message_text || '';
+            const processedText = linkify(textRaw);
+            
+            let content = msg.message_text ? `<div>${processedText}</div>` : '';
+            if(msg.image_url) {
+                content += `<img src="${msg.image_url}" class="chat-img" alt="صورة مرفقة" onclick="window.open('${msg.image_url}', '_blank')">`;
+            }
+            
+            let checkmark = '';
+            if (boxId === 'support-box' && msg.sender_id === myProfile.id) {
+                checkmark = msg.is_read 
+                    ? ' <span style="color: #34c759; font-size: 11px; margin-right: 5px; font-weight: bold;">✔️✔️</span>' 
+                    : ' <span style="color: #888; font-size: 11px; margin-right: 5px; font-weight: bold;">✔️</span>';
+            }
+            
+            const displayName = msg.username || msg.sender_name || "مستخدم";
+            
+            const msgElement = document.createElement('div');
+            msgElement.className = 'msg';
+            msgElement.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="${userClass}">${displayName}</span>
+                    ${checkmark}
+                </div>
+                ${content}
+            `;
+            
+            attachLongPressListener(msgElement, textRaw);
+            box.appendChild(msgElement);
+            box.scrollTop = box.scrollHeight;
+        }
+    }
+
+    async function updateUsername() {
+        const newName = document.getElementById('new-username').value.trim();
+        if(!newName) return;
+        const { error } = await _supabase.from('profiles').update({ username: newName }).eq('id', myProfile.id);
+        if(error) alert('الاسم مستخدم مسبقاً');
+        else { alert('تم التحديث!'); location.reload(); }
+    }
+
+    function logout() { forceClearSession(); }
+    
+    async function loadAdminPanel() {
+        const { data } = await _supabase.from('profiles').select().order('username');
+        const listDiv = document.getElementById('employees-list');
+        listDiv.innerHTML = '';
+        
+        if(data) {
+            let totalEmployees = 0; let totalAdmins = 0;
+            data.forEach(emp => {
+                const role = emp.role || 'موظف';
+                if(role === 'موظف' || role === 'User') { totalEmployees++; } else { totalAdmins++; }
+            });
+
+            listDiv.innerHTML += `
+                <div style="background: #1a1a1a; border: 1px solid var(--gold); padding: 12px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 11px; color: #888; margin-bottom: 4px;">👥 الموظفين</div>
+                        <div style="font-size: 18px; color: var(--gold); font-weight: bold;">${totalEmployees}</div>
+                    </div>
+                    <div style="border-left: 1px solid #333; height: 35px; align-self: center;"></div>
+                    <div>
+                        <div style="font-size: 11px; color: #888; margin-bottom: 4px;">🛡️ المشرفين والمدراء</div>
+                        <div style="font-size: 18px; color: #00ff00; font-weight: bold;">${totalAdmins}</div>
+                    </div>
+                    <div style="border-left: 1px solid #333; height: 35px; align-self: center;"></div>
+                    <div>
+                        <div style="font-size: 11px; color: #888; margin-bottom: 4px;">📊 الإجمالي</div>
+                        <div style="font-size: 18px; color: #fff; font-weight: bold;">${data.length}</div>
+                    </div>
+                </div>`;
+
+            data.forEach(emp => {
+                const isUserBanned = emp.is_banned === true;
+                const userRole = emp.role || 'موظف';
+                
+                const isManager = myProfile.role === 'مدير';
+                const isFinancialManager = myProfile.role === 'مدير مالي';
+                const isSupervisor = myProfile.role === 'مشرف';
+                const isTargetEmployee = userRole === 'موظف';
+
+                // 🌟 القائمة المنسدلة للرتب تضم رتبة "مشرف" 🌟
+                const roleSelector = isManager ? `
+                    <select onchange="updateUserRole('${emp.id}', this.value)" style="width:auto; padding: 4px; font-size:11px; margin-top:5px; display:inline-block; height: auto; margin-bottom:0; margin-left: 5px;">
+                        <option value="موظف" ${userRole === 'موظف' ? 'selected' : ''}>موظف</option>
+                        <option value="مشرف" ${userRole === 'مشرف' ? 'selected' : ''}>مشرف</option>
+                        <option value="مدير مالي" ${userRole === 'مدير مالي' ? 'selected' : ''}>مدير مالي</option>
+                        <option value="مدير" ${userRole === 'مدير' ? 'selected' : ''}>مدير</option>
+                    </select>
+                ` : '';
+
+                let banBtn = '';
+                if (isManager || (isSupervisor && isTargetEmployee)) {
+                    const actionLabel = isUserBanned ? '🔓 فك الحظر' : '🚫 حظر وطرد';
+                    const actionColor = isUserBanned ? 'background-color: var(--green); color: white;' : 'background-color: var(--red); color: white;';
+                    banBtn = `<button onclick="toggleUserBan('${emp.id}', ${isUserBanned})" style="width:auto; font-size:11px; margin-top:5px; ${actionColor}">${actionLabel}</button>`;
+                }
+
+                let salaryModifierArea = '';
+                if (isManager || isFinancialManager) {
+                    salaryModifierArea = `
+                        <div style="margin-top: 8px; display: flex; gap: 4px; align-items: center;">
+                            <input type="number" id="salary-input-${emp.id}" value="${emp.salary || 0}" style="width: 100px; padding: 4px; font-size: 12px; margin: 0; background: #333; border: 1px solid var(--gold); text-align: center;">
+                            <button onclick="updateUserSalary('${emp.id}')" style="width: auto; padding: 4px 10px; font-size: 11px; background-color: var(--green); color: white;">💾 حفظ الراتب</button>
+                        </div>
+                    `;
+                }
+
+                listDiv.innerHTML += `
+                    <div class="admin-card" style="${isUserBanned ? 'border-color: var(--red); opacity: 0.8;' : ''}">
+                        <strong>${emp.username}</strong> ${isUserBanned ? '<span style="color:var(--red); font-weight:bold;">(محظور)</span>' : ''}<br>
+                        الرتبة: <span style="color: var(--gold); font-weight:bold;">${userRole}</span><br>
+                        الراتب الحالي: ${emp.salary || 0} ل.س<br>
+                        إحالاته: ${emp.referral_count || 0}<br>
+                        كود دعوته: ${emp.referral_code || 'غير منشأ'}<br>
+                        سيريتل كاش: ${emp.syriatel_cash || 'لم يربط بعد'}<br>
+                        ${salaryModifierArea}
+                        <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; align-items:center;">
+                            ${roleSelector}
+                            ${banBtn}
+                        </div>
+                    </div>`;
+            });
+        }
+    }
+
+    async function updateUserSalary(id) {
+        const inputField = document.getElementById(`salary-input-${id}`);
+        if (!inputField) return;
+        
+        const newSalary = parseFloat(inputField.value);
+        if (isNaN(newSalary) || newSalary < 0) return alert("الرجاء إدخال قيمة راتب صحيحة!");
+
+        if (myProfile.role !== 'مدير' && myProfile.role !== 'مدير مالي') {
+            return alert("عذراً، رتبة مدير أو مدير مالي فقط من تملك صلاحية تعديل الرواتب!");
+        }
+
+        try {
+            const { error } = await _supabase.from('profiles').update({ salary: newSalary }).eq('id', id);
+            if (error) { alert("فشل تحديث الراتب: " + error.message); } 
+            else {
+                alert("تم تحديث وحفظ الراتب بنجاح! 🎉");
+                loadAdminPanel(); 
+            }
+        } catch(e) { alert("خطأ أثناء العملية: " + e.message); }
+    }
+    
+    async function toggleUserBan(id, currentBanStatus) {
+        const confirmMsg = currentBanStatus ? "هل أنت متأكد من فك حظر هذا المستخدم؟" : "هل أنت متأكد من حظر وطرد هذا المستخدم من التطبيق؟";
+        if (confirm(confirmMsg)) {
+            const { error } = await _supabase.from('profiles').update({ is_banned: !currentBanStatus }).eq('id', id);
+            if (error) alert("خطأ في تعديل حالة الحظر: " + error.message);
+            else { alert("تم تحديث حالة الحظر بنجاح!"); loadAdminPanel(); }
+        }
+    }
+
+    async function updateUserRole(id, newRole) {
+        if (myProfile.role !== 'مدير') { return alert("عذراً، رتبة مدير فقط هي من تمتلك صلاحية تعديل رتب الموظفين!"); }
+        const { error = null } = await _supabase.from('profiles').update({ role: newRole }).eq('id', id);
+        if (error) alert(error.message);
+        else { alert("تم تعديل رتبة المستخدم بنجاح!"); loadAdminPanel(); }
+    }
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+          console.log('Service Worker Registered Successfully!', reg);
+      }).catch((err) => console.log('Service Worker Registration Failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
