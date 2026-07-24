@@ -1104,32 +1104,41 @@
 </script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", async function() {
-      // التأكد من العمل داخل بيئة التطبيق وموفر Push Notifications
-      if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
-        const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+    window.addEventListener('DOMContentLoaded', async () => {
+      // إعطاء مهلة صغيرة لضمان جاهزية بيئة الكاباسيتور
+      setTimeout(async () => {
+        try {
+          if (window.Capacitor && window.Capacitor.isPluginAvailable('PushNotifications')) {
+            const PushNotifications = window.Capacitor.Plugins.PushNotifications;
 
-        //طلب الإذن
-        let permStatus = await PushNotifications.checkPermissions();
-        if (permStatus.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions();
+            let permStatus = await PushNotifications.checkPermissions();
+            if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+              permStatus = await PushNotifications.requestPermissions();
+            }
+
+            if (permStatus.receive === 'granted') {
+              await PushNotifications.register();
+            }
+
+            PushNotifications.addListener('registration', (token) => {
+              console.log('FCM Token Success:', token.value);
+              // يمكنك هنا حفظ الtoken أو إرساله لسيرفرك
+            });
+
+            PushNotifications.addListener('registrationError', (err) => {
+              console.error('FCM Registration Error: ', JSON.stringify(err));
+            });
+
+            PushNotifications.addListener('pushNotificationReceived', (notification) => {
+              console.log('Notification received: ', notification);
+            });
+          } else {
+            console.log('PushNotifications plugin not available');
+          }
+        } catch (e) {
+          console.error('Error initializing notifications:', e);
         }
-
-        if (permStatus.receive === 'granted') {
-          // تسجيل الجهاز في Firebase
-          await PushNotifications.register();
-        }
-
-        // الاستماع لرمز الجهاز (Token) لارسال الإشعارات إليه مستقبلاً
-        PushNotifications.addListener('registration', (token) => {
-          console.log('Firebase Token:', token.value);
-        });
-
-        // الاستماع للإشعارات القادمة والتطبيق مفتوح
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Notification received: ', notification);
-        });
-      }
+      }, 1500); // مهلة 1.5 ثانية لضمان استقرار التطبيق عند الفتح
     });
   </script>
 </body>
