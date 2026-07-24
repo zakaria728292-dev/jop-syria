@@ -1,4 +1,4 @@
-name: Build Android APK
+Name: Build Android APK
 
 on:
   push:
@@ -41,25 +41,42 @@ jobs:
 
     - name: Setup Android Icons
       run: |
-        # التأكد من وجود الأيقونة بأي صيغة متاحة
+        # 1. تثبيت أداة معالجة الصور ImageMagick
+        sudo apt-get update && sudo apt-get install -y imagemagick
+
+        # 2. تحديد الصورة المصدر
         ICON_SRC="icon-512.png"
         [ -f "$ICON_SRC" ] || ICON_SRC="icon-192.png"
 
         RES_PATH="android/app/src/main/res"
 
         if [ -f "$ICON_SRC" ]; then
-          cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher.png"
-          cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher.png"
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher.png"
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher.png"
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher.png"
-          # نسخ أيضا لأيقونة الإشعارات المستديرة إن وجدت
-          cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher_round.png" 2>/dev/null || true
-          cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher_round.png" 2>/dev/null || true
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher_round.png" 2>/dev/null || true
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher_round.png" 2>/dev/null || true
-          cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher_round.png" 2>/dev/null || true
-          echo "Icons applied successfully."
+          echo "Processing icon from $ICON_SRC..."
+
+          # حذف أيقونات Adaptive XML الافتراضية كي لا تتغلب على الصور
+          rm -rf $RES_PATH/mipmap-anydpi-v26
+
+          # دالة لتوليد وتغيير حجم الأيقونات بدقة لكل الكثافات
+          generate_icons() {
+            DIR_NAME=$1
+            SIZE=$2
+            
+            mkdir -p "$RES_PATH/$DIR_NAME"
+            
+            # تغيير الحجم وحفظ الأيقونات الأساسية والدائرية وأيقونات الواجهة (Foreground)
+            convert "$ICON_SRC" -resize "${SIZE}x${SIZE}" "$RES_PATH/$DIR_NAME/ic_launcher.png"
+            convert "$ICON_SRC" -resize "${SIZE}x${SIZE}" "$RES_PATH/$DIR_NAME/ic_launcher_round.png"
+            convert "$ICON_SRC" -resize "${SIZE}x${SIZE}" "$RES_PATH/$DIR_NAME/ic_launcher_foreground.png"
+          }
+
+          # توليد الأيقونات بالحجم البرمجي الدقيق المعتمد في أندرويد
+          generate_icons "mipmap-mdpi" "48"
+          generate_icons "mipmap-hdpi" "72"
+          generate_icons "mipmap-xhdpi" "96"
+          generate_icons "mipmap-xxhdpi" "144"
+          generate_icons "mipmap-xxxhdpi" "192"
+
+          echo "Icons created and resized successfully."
         else
           echo "Warning: No icon file found (icon-512.png or icon-192.png). Default icon will be used."
         fi
