@@ -26,16 +26,16 @@ jobs:
         npm init -y
         npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/push-notifications@5
         
-        npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
+        # استخدام اسم الحزمة المطابق تماماً لملف الفايربيس
+        npx cap init "Job Syria" "com.job.syria" --web-dir www
         npx cap add android
 
     - name: Setup Firebase Config
       run: |
-        # نقل ملف google-services.json إلى مسار تطبيق الأندرويد الأصلي
         if [ -f "google-services.json" ]; then
           cp google-services.json android/app/google-services.json
           
-          # إضافة مكوّن google-services لملفات Gradle
+          # ربط مكونات الفايربيس بمشروع الأندرويد
           sed -i "/dependencies {/a \        classpath 'com.google.gms:google-services:4.4.0'" android/build.gradle
           echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
         fi
