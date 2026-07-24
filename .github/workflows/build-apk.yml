@@ -25,25 +25,17 @@ jobs:
         
         npm init -y
         npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/push-notifications@5
+        npm install @capacitor/assets --save-dev
         
         npx cap init "Job Syria" "com.jobsyria.app" --web-dir www
         npx cap add android
 
-    - name: Replace Android Launcher Icons
+    - name: Setup Assets & Generate Icons
       run: |
-        # استبدال أيقونات الأندرويد بأيقونة التطبيق المرفقة
-        ICON_SRC="icon-512.png"
-        RES_DIR="android/app/src/main/res"
-        
-        if [ -f "$ICON_SRC" ]; then
-          for dir in $RES_DIR/mipmap*; do
-            if [ -d "$dir" ]; then
-              cp "$ICON_SRC" "$dir/ic_launcher.png" 2>/dev/null || true
-              cp "$ICON_SRC" "$dir/ic_launcher_round.png" 2>/dev/null || true
-              cp "$ICON_SRC" "$dir/ic_launcher_foreground.png" 2>/dev/null || true
-            fi
-          done
-        fi
+        mkdir -p assets
+        cp icon-512.png assets/icon-only.png 2>/dev/null || cp icon-192.png assets/icon-only.png 2>/dev/null || true
+        cp icon-512.png assets/icon-foreground.png 2>/dev/null || cp icon-192.png assets/icon-foreground.png 2>/dev/null || true
+        npx capacitor-assets generate --android 2>/dev/null || true
 
     - name: Add Permissions to AndroidManifest
       run: |
