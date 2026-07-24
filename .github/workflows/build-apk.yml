@@ -26,7 +26,6 @@ jobs:
         npm init -y
         npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/push-notifications@5
         
-        # استخدام اسم الحزمة المطابق تماماً لملف الفايربيس
         npx cap init "Job Syria" "com.job.syria" --web-dir www
         npx cap add android
 
@@ -34,24 +33,36 @@ jobs:
       run: |
         if [ -f "google-services.json" ]; then
           cp google-services.json android/app/google-services.json
-          
-          # ربط مكونات الفايربيس بمشروع الأندرويد
           sed -i "/dependencies {/a \        classpath 'com.google.gms:google-services:4.4.0'" android/build.gradle
           echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+        else
+          echo "Warning: google-services.json not found in root directory!"
         fi
 
     - name: Setup Android Icons
       run: |
+        # التأكد من وجود الأيقونة بأي صيغة متاحة
         ICON_SRC="icon-512.png"
         [ -f "$ICON_SRC" ] || ICON_SRC="icon-192.png"
 
         RES_PATH="android/app/src/main/res"
 
-        cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher.png" 2>/dev/null || true
-        cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher.png" 2>/dev/null || true
-        cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher.png" 2>/dev/null || true
-        cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher.png" 2>/dev/null || true
-        cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher.png" 2>/dev/null || true
+        if [ -f "$ICON_SRC" ]; then
+          cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher.png"
+          cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher.png"
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher.png"
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher.png"
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher.png"
+          # نسخ أيضا لأيقونة الإشعارات المستديرة إن وجدت
+          cp "$ICON_SRC" "$RES_PATH/mipmap-hdpi/ic_launcher_round.png" 2>/dev/null || true
+          cp "$ICON_SRC" "$RES_PATH/mipmap-mdpi/ic_launcher_round.png" 2>/dev/null || true
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xhdpi/ic_launcher_round.png" 2>/dev/null || true
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xxhdpi/ic_launcher_round.png" 2>/dev/null || true
+          cp "$ICON_SRC" "$RES_PATH/mipmap-xxxhdpi/ic_launcher_round.png" 2>/dev/null || true
+          echo "Icons applied successfully."
+        else
+          echo "Warning: No icon file found (icon-512.png or icon-192.png). Default icon will be used."
+        fi
 
     - name: Add Permissions to AndroidManifest
       run: |
