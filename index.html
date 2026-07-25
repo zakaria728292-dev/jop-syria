@@ -206,6 +206,7 @@
         return false;
     }
 
+    /* 🌟 1️⃣ تحسين إظهار الإشعارات مع الصوت والاهتزاز 🌟 */
     async function triggerNotification(title, body, imageUrl = null) {
         if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
@@ -213,7 +214,10 @@
                 icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 image: imageUrl ? imageUrl : undefined,
-                vibrate: [200, 100, 200]
+                vibrate: [300, 100, 300, 100, 300], // نمط اهتزاز واضح للموبايل
+                renotify: true,
+                tag: "job-syria-notification",
+                silent: false
             };
 
             if ('serviceWorker' in navigator) {
@@ -322,7 +326,6 @@
     let isSavingUser = false;
     let isChatLocked = false;
     let activeSupportRoomId = null;
-    let selectedAdminRecipientId = null; 
     let currentActivePage = 'chat'; 
     let tempUserDataAfterSignUp = null; 
 
@@ -750,19 +753,21 @@
         if(!roomId || !myProfile) return;
         try {
             await _supabase.from('private_chats').update({ is_read: true }).eq('room_id', roomId).eq('is_read', false).neq('sender_id', myProfile.id);
-            // 🌟 إعادة تحميل قائمة الخيارات لتحديث الدوائر الحمراء واختفائها فوراً 🌟
             await loadSupportRoomsSelector();
         } catch (e) {}
     }
 
+    /* 🌟 3️⃣ إلغاء القائمة المنسدلة للموظف وتحديد المحادثة لتصل لجميع المسؤولين 🌟 */
     async function loadSupportRoomsSelector() {
         const selector = document.getElementById('support-room-selector');
         const label = document.getElementById('support-selector-label');
+        const roomsArea = document.getElementById('support-rooms-area');
         if(!selector || !myProfile) return;
 
         const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
 
         if (isStaff) {
+            if(roomsArea) roomsArea.classList.remove('hidden');
             if(label) label.innerText = "اختر غرفة العميل أو الإرسال الجماعي:";
             const { data: users } = await _supabase.from('profiles').select('id, username').eq('role', 'موظف');
             
@@ -802,22 +807,9 @@
                 selector.innerHTML = broadcastOptionHtml + '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
             }
         } else {
-            // الموظف: غرفته هي معرّف حسابه، والآن يتم اختيار وتصفية المسؤول المستهدف
+            // الموظف: الغرفة هي معرّف حسابه مباشرة مع إخفاء صندوق التحديد كلياً
             activeSupportRoomId = myProfile.id;
-            if(label) label.innerText = "اختر المسؤول الذي ترغب بالتحدث معه:";
-            const { data: admins } = await _supabase.from('profiles').select('id, username, role').in('role', ['مدير', 'مشرف', 'مدير مالي']);
-
-            if(admins && admins.length > 0) {
-                if(!selectedAdminRecipientId) {
-                    selectedAdminRecipientId = admins[0].id;
-                }
-                selector.innerHTML = admins.map(a => {
-                    const isSelected = (selectedAdminRecipientId === a.id);
-                    return `<option value="${a.id}" ${isSelected ? 'selected' : ''}>${a.username} (${a.role})</option>`;
-                }).join('');
-            } else {
-                selector.innerHTML = `<option value="">فريق الدعم الفني</option>`;
-            }
+            if(roomsArea) roomsArea.classList.add('hidden');
         }
     }
 
@@ -829,7 +821,6 @@
                 await markRoomAsRead(value);
             }
         } else {
-            selectedAdminRecipientId = value;
             activeSupportRoomId = myProfile.id;
         }
         await loadSupportMessages(activeSupportRoomId);
@@ -909,7 +900,7 @@
         });
     });
 
-    /* 🌟 إصلاح دالة جلب وتصفية الرسائل المخصصة لكل مشرف وموظف 🌟 */
+    /* 🌟 إلغاء التصفية الفردية ليعود الشات موحداً يجمع الموظف بكافة الإداريين 🌟 */
     async function loadSupportMessages(roomId) {
         const box = document.getElementById('support-box');
         if(!box || !roomId) return;
@@ -923,21 +914,11 @@
         box.innerHTML = '';
         
         if(data) {
-            const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
-            
-            // تصفية الرسائل: إذا كان المستخدم موظفاً، يتم تصفية المحادثة فقط بحسب المشرف المحدد من القائمة المنسدلة
-            if (!isStaff && selectedAdminRecipientId) {
-                data = data.filter(msg => {
-                    const isFromMe = msg.sender_id === myProfile.id;
-                    const isFromSelectedAdmin = msg.sender_id === selectedAdminRecipientId;
-                    return isFromMe || isFromSelectedAdmin;
-                });
-            }
-
             data.forEach(msg => appendMessage(msg, 'support-box')); 
         }
     }
 
+    /* 🌟 2️⃣ تصحيح إرسال التنبيهات وإشعار المسؤولين فوراً 🌟 */
     async function setupSupportRealtime() {
         const box = document.getElementById('support-box');
         if(!box || !activeSupportRoomId) return;
@@ -958,21 +939,19 @@
                 const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
                 
                 if (newMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
-                    // إعادة تحميل الرسائل المصفاة فور وصول أي رسالة جديدة
                     await loadSupportMessages(activeSupportRoomId);
                     if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
                         await markRoomAsRead(activeSupportRoomId);
                     }
                 } 
 
+                // منطق الإشعارات والتنبيه بالصوت والاهتزاز
                 if (newMsg.sender_id !== myProfile.id) {
                     if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
                         triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
                     }
                     else if (isStaff && !isSenderStaff) {
-                        if (newMsg.room_id !== activeSupportRoomId || document.hidden) {
-                            triggerNotification(`دعم فني من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
-                        }
+                        triggerNotification(`طلب دعم من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
                     }
                 }
 
