@@ -206,7 +206,7 @@
         return false;
     }
 
-    /* 🌟 1️⃣ تحسين إظهار الإشعارات مع الصوت والاهتزاز 🌟 */
+    /* 🌟 1️⃣ تحسين إظهار الإشعارات وتشغيل نغمة تنبيه صوتية 🌟 */
     async function triggerNotification(title, body, imageUrl = null) {
         if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
@@ -214,21 +214,27 @@
                 icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 image: imageUrl ? imageUrl : undefined,
-                vibrate: [300, 100, 300, 100, 300], // نمط اهتزاز واضح للموبايل
+                vibrate: [400, 100, 400, 100, 400],
                 renotify: true,
                 tag: "job-syria-notification",
                 silent: false
             };
+
+            // 🔊 تشغيل صوت تنبيه عند وصول الإشعار
+            try {
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(() => {});
+            } catch(e) {}
 
             if ('serviceWorker' in navigator) {
                 try {
                     const reg = await navigator.serviceWorker.ready;
                     reg.showNotification(title, notificationOptions);
                 } catch (e) {
-                    new Notification(title, { body: body, icon: notificationOptions.icon });
+                    new Notification(title, notificationOptions);
                 }
             } else {
-                new Notification(title, { body: body, icon: notificationOptions.icon });
+                new Notification(title, notificationOptions);
             }
         }
     }
@@ -703,11 +709,18 @@
         else { alert("تم حفظ الرمز بنجاح! 🎉"); myProfile.syriatel_cash = cashCode; }
     }
 
+    /* 🌟 إصلاح رابط الدعوة بتثبيت رابط الموقع الأصلي بدلاً من localhost 🌟 */
     function copyReferralLink() {
         if (!myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار...');
-        const referralLink = `${window.location.origin}${window.location.pathname}?ref=${myProfile.referral_code}`;
+        
+        const baseUrl = "https://small-cell-6846.zakaria728292.workers.dev";
+        const referralLink = `${baseUrl}/?ref=${myProfile.referral_code}`;
+        
         const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
-        navigator.clipboard.writeText(formattedText).then(() => { alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); });
+        
+        navigator.clipboard.writeText(formattedText).then(() => { 
+            alert(`تم نسخ رابط الإحالة الخاص بك بنجاح! 🎉`); 
+        });
     }
 
     function switchPage(p) {
@@ -757,7 +770,6 @@
         } catch (e) {}
     }
 
-    /* 🌟 3️⃣ إلغاء القائمة المنسدلة للموظف وتحديد المحادثة لتصل لجميع المسؤولين 🌟 */
     async function loadSupportRoomsSelector() {
         const selector = document.getElementById('support-room-selector');
         const label = document.getElementById('support-selector-label');
@@ -807,7 +819,6 @@
                 selector.innerHTML = broadcastOptionHtml + '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
             }
         } else {
-            // الموظف: الغرفة هي معرّف حسابه مباشرة مع إخفاء صندوق التحديد كلياً
             activeSupportRoomId = myProfile.id;
             if(roomsArea) roomsArea.classList.add('hidden');
         }
@@ -900,7 +911,6 @@
         });
     });
 
-    /* 🌟 إلغاء التصفية الفردية ليعود الشات موحداً يجمع الموظف بكافة الإداريين 🌟 */
     async function loadSupportMessages(roomId) {
         const box = document.getElementById('support-box');
         if(!box || !roomId) return;
@@ -918,7 +928,7 @@
         }
     }
 
-    /* 🌟 2️⃣ تصحيح إرسال التنبيهات وإشعار المسؤولين فوراً 🌟 */
+    /* 🌟 3️⃣ إصلاح وصول التنبيهات للمشرفين والمدراء عند وجود رسالة جديدة 🌟 */
     async function setupSupportRealtime() {
         const box = document.getElementById('support-box');
         if(!box || !activeSupportRoomId) return;
@@ -945,13 +955,15 @@
                     }
                 } 
 
-                // منطق الإشعارات والتنبيه بالصوت والاهتزاز
+                // 🌟 إرسال الإشعار والتنبيه فوراً إذا كان المرسل شخصاً آخر
                 if (newMsg.sender_id !== myProfile.id) {
-                    if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
-                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                    if (isStaff && !isSenderStaff) {
+                        // إشعار شامل لكل المشرفين والمدراء عند أية رسالة من الموظفين
+                        triggerNotification(`طلب دعم جديد من: ${newMsg.sender_name || 'موظف'}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
                     }
-                    else if (isStaff && !isSenderStaff) {
-                        triggerNotification(`طلب دعم من: ${newMsg.sender_name}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                    else if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
+                        // إشعار للموظف عند إرسال الإدارة له
+                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
                     }
                 }
 
