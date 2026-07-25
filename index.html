@@ -322,7 +322,7 @@
     let isSavingUser = false;
     let isChatLocked = false;
     let activeSupportRoomId = null;
-    let selectedAdminRecipientId = null; // متغيّر مضاف لحفظ المسؤول المختار عند الموظف
+    let selectedAdminRecipientId = null; 
     let currentActivePage = 'chat'; 
     let tempUserDataAfterSignUp = null; 
 
@@ -716,9 +716,7 @@
         
         if (p === 'support') {
             document.getElementById('support-badge').classList.add('hidden');
-            if (myProfile && !['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role)) {
-                markRoomAsRead(myProfile.id);
-            }
+            markRoomAsRead(activeSupportRoomId);
         }
     }
 
@@ -752,10 +750,11 @@
         if(!roomId || !myProfile) return;
         try {
             await _supabase.from('private_chats').update({ is_read: true }).eq('room_id', roomId).eq('is_read', false).neq('sender_id', myProfile.id);
+            // 🌟 إعادة تحميل قائمة الخيارات لتحديث الدوائر الحمراء واختفائها فوراً 🌟
+            await loadSupportRoomsSelector();
         } catch (e) {}
     }
 
-    /* 🛠️ تعديل منطقي جوهري: فصل اختيار المسؤول عن تغيير الغرفة عند الموظف 🛠️ */
     async function loadSupportRoomsSelector() {
         const selector = document.getElementById('support-room-selector');
         const label = document.getElementById('support-selector-label');
@@ -803,7 +802,7 @@
                 selector.innerHTML = broadcastOptionHtml + '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
             }
         } else {
-            // الموظف: الغرفة هي دائماً معرّف حسابه الشخصي
+            // الموظف: غرفته هي معرّف حسابه، والآن يتم اختيار وتصفية المسؤول المستهدف
             activeSupportRoomId = myProfile.id;
             if(label) label.innerText = "اختر المسؤول الذي ترغب بالتحدث معه:";
             const { data: admins } = await _supabase.from('profiles').select('id, username, role').in('role', ['مدير', 'مشرف', 'مدير مالي']);
@@ -830,7 +829,6 @@
                 await markRoomAsRead(value);
             }
         } else {
-            // الموظف يحتفظ برقم غرفته الخاص ويغير المسؤول المستهدف فقط
             selectedAdminRecipientId = value;
             activeSupportRoomId = myProfile.id;
         }
@@ -911,6 +909,7 @@
         });
     });
 
+    /* 🌟 إصلاح دالة جلب وتصفية الرسائل المخصصة لكل مشرف وموظف 🌟 */
     async function loadSupportMessages(roomId) {
         const box = document.getElementById('support-box');
         if(!box || !roomId) return;
@@ -922,7 +921,21 @@
 
         let { data } = await _supabase.from('private_chats').select('*').eq('room_id', roomId).order('created_at');
         box.innerHTML = '';
-        if(data) { data.forEach(msg => appendMessage(msg, 'support-box')); }
+        
+        if(data) {
+            const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+            
+            // تصفية الرسائل: إذا كان المستخدم موظفاً، يتم تصفية المحادثة فقط بحسب المشرف المحدد من القائمة المنسدلة
+            if (!isStaff && selectedAdminRecipientId) {
+                data = data.filter(msg => {
+                    const isFromMe = msg.sender_id === myProfile.id;
+                    const isFromSelectedAdmin = msg.sender_id === selectedAdminRecipientId;
+                    return isFromMe || isFromSelectedAdmin;
+                });
+            }
+
+            data.forEach(msg => appendMessage(msg, 'support-box')); 
+        }
     }
 
     async function setupSupportRealtime() {
@@ -945,7 +958,8 @@
                 const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
                 
                 if (newMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
-                    appendMessage(newMsg, 'support-box');
+                    // إعادة تحميل الرسائل المصفاة فور وصول أي رسالة جديدة
+                    await loadSupportMessages(activeSupportRoomId);
                     if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
                         await markRoomAsRead(activeSupportRoomId);
                     }
