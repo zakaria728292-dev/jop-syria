@@ -2,457 +2,184 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Job Syria</title>
+    
+    <!-- 🌟 خصائص تحويل الموقع إلى تطبيق مستقل (PWA / APK Wrapper) 🌟 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    
+    <!-- 🌟 وسوم المعاينة المسبقة 🌟 -->
+    <meta property="og:title" content="Job Syria" />
+    <meta property="og:description" content="تطبيق للعمل اون لاين في سوريا" />
+    <meta property="og:image" content="https://i.ibb.co/23cTDk18/1782795963942.png" />
+    <meta property="og:url" content="https://teal-douhua-036004.netlify.app/" />
+    <meta property="og:type" content="website" />
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #0d0d0d;
-            --card-bg: #171717;
-            --gold: #d4af37;
-            --gold-hover: #f3cf55;
-            --text-color: #f5f5f5;
-            --text-secondary: #aaaaaa;
-            --border-color: #262626;
-            --green: #2e7d32;
-            --red: #c62828;
-            --input-bg: #222222;
-        }
+        :root { --gold: #D4AF37; --dark-bg: #121212; --card-bg: #1E1E1E; --text-white: #ffffff; --red: #ff3b30; --green: #34c759; --whatsapp-green: #25D366; }
+        body { background-color: var(--dark-bg); color: var(--text-white); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        .container { background-color: var(--card-bg); border: 2px solid var(--gold); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); box-sizing: border-box; }
+        h1 { color: var(--gold); text-align: center; margin-bottom: 24px; letter-spacing: 2px; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 16px; background-color: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; box-sizing: border-box; -webkit-user-select: text; user-select: text; }
+        input:focus, select:focus { border-color: var(--gold); outline: none; }
+        button { width: 100%; padding: 12px; background-color: var(--gold); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #c5a028; }
+        .link-btn { background: none; color: var(--gold); border: none; text-align: center; width: 100%; margin-top: 10px; text-decoration: underline; font-size: 14px; cursor: pointer; }
+        .hidden { display: none !important; }
+        .nav-bar { display: flex; justify-content: space-around; background-color: #1a1a1a; padding: 10px 0; position: fixed; bottom: 0; left: 0; width: 100%; border-top: 1px solid var(--gold); z-index: 1000; }
+        .nav-item { color: #888; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; position: relative; }
+        .nav-item.active { color: var(--gold); }
+        
+        .red-dot { width: 8px; height: 8px; background-color: var(--red); border-radius: 50%; display: inline-block; }
+        .emp-count-box { background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 8px 12px; text-align: center; font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 12px; box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.05); }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        /* صناديق الدردشة */
+        .chat-box { height: 380px; overflow-y: auto; border: 1px solid #333; padding: 10px; margin-bottom: 10px; background: #151515; border-radius: 8px; }
+        .msg { margin-bottom: 10px; padding: 8px; background: #222; border-radius: 6px; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .msg-user { color: var(--gold); font-weight: bold; font-size: 12px; }
+        .msg-green { color: #00ff00 !important; font-weight: bold; font-size: 13px; }
+        .chat-img { max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid #444; cursor: pointer; }
+        
+        .chat-link { color: #3498db !important; text-decoration: underline !important; font-weight: bold; cursor: pointer; -webkit-user-select: auto; user-select: auto; word-break: break-all; display: inline-block; }
+        .chat-link:hover { color: #5dade2 !important; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            direction: rtl;
-        }
+        .custom-context-menu { position: fixed; background: #151515; border: 1px solid #333; border-radius: 8px; padding: 6px 0; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 140px; }
+        .context-menu-item { padding: 10px 16px; font-size: 14px; color: rgba(255, 255, 255, 0.7); cursor: pointer; text-align: right; transition: background 0.2s; }
+        .context-menu-item:hover { background: #222; color: #fff; }
 
-        #app-container {
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            background-color: #000000;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            overflow: hidden;
-        }
+        .salary-badge { background: #2c2510; border: 1px solid var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 18px; margin-bottom: 20px; }
+        .referral-section { background: #1a1a1a; border: 1px dashed var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 14px; margin-bottom: 20px; }
+        .admin-card { background: #222; border: 1px solid #333; padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
+        
+        .cash-section { border: 1px solid #444; padding: 15px; border-radius: 8px; margin-bottom: 20px; background-color: #1a1a1a; }
+        .cash-section label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
+        
+        .btn-whatsapp { background-color: var(--whatsapp-green); color: #fff; font-weight: bold; font-size: 14px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; }
+        .btn-whatsapp:hover { background-color: #1ebc57; }
 
-        header {
-            background-color: var(--card-bg);
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
+        .btn-contact { background-color: #242424; color: #fff; border: 1px solid #555; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #monitor { width: 100%; max-width: 400px; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; -webkit-user-select: text; user-select: text; word-break: break-all; }
 
-        header h1 {
-            font-size: 18px;
-            color: var(--gold);
-            font-weight: bold;
-        }
+        .admin-chat-controls { display: flex; justify-content: space-between; align-items: center; background: #222; border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+        .chat-status-text { font-size: 12px; font-weight: bold; }
+        .btn-toggle-chat { width: auto; padding: 6px 12px; font-size: 12px; }
 
-        .online-count {
-            font-size: 12px;
-            color: var(--text-secondary);
-            background: #222;
-            padding: 4px 8px;
-            border-radius: 12px;
-            border: 1px solid #333;
-        }
-
-        .page {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            padding-bottom: 70px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Auth Styles */
-        .auth-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 100%;
-            gap: 15px;
-        }
-
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .auth-logo img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--input-bg);
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 10px;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--gold);
-        }
-
-        button {
-            background-color: var(--gold);
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
-
-        button:active {
-            transform: scale(0.98);
-            background-color: var(--gold-hover);
-        }
-
-        button.secondary {
-            background-color: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Chat Styles */
-        .chat-box {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 10px;
-            padding-right: 5px;
-        }
-
-        .msg {
-            background-color: var(--card-bg);
-            padding: 10px 12px;
-            border-radius: 10px;
-            max-width: 85%;
-            word-break: break-word;
-            border: 1px solid var(--border-color);
-            position: relative;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .msg-user {
-            color: var(--gold);
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .msg-green {
-            color: #20e070 !important;
-        }
-
-        .chat-input-container {
-            display: flex;
-            gap: 8px;
-            background: var(--card-bg);
-            padding: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .chat-input-container input {
-            margin-bottom: 0;
-        }
-
-        .chat-input-container button {
-            width: auto;
-            padding: 0 15px;
-            margin-bottom: 0;
-        }
-
-        .chat-img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 5px;
-            cursor: pointer;
-        }
-
-        .chat-link {
-            color: #3498db;
-            text-decoration: underline;
-        }
-
-        /* Navigation Bar */
-        nav {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 60px;
-            background-color: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--border-color);
-            z-index: 10;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 10px;
-            cursor: pointer;
-            position: relative;
-            width: 25%;
-            padding: 5px 0;
-        }
-
-        .nav-item.active {
-            color: var(--gold);
-        }
-
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-            margin-bottom: 3px;
-        }
-
-        .badge {
-            position: absolute;
-            top: 2px;
-            right: 22px;
-            width: 8px;
-            height: 8px;
-            background-color: var(--red);
-            border-radius: 50%;
-        }
-
-        /* Cards & Admin Panels */
-        .card {
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 12px;
-        }
-
-        .card-title {
-            font-size: 14px;
-            color: var(--gold);
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .admin-card {
-            background-color: #1a1a1a;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-
-        /* Context Menu */
-        .custom-context-menu {
-            position: absolute;
-            background-color: #222;
-            border: 1px solid var(--gold);
-            border-radius: 6px;
-            padding: 5px 0;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .context-menu-item {
-            padding: 8px 15px;
-            font-size: 12px;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .context-menu-item:hover {
-            background-color: var(--gold);
-            color: #000;
-        }
-
-        #monitor {
-            background: #050505;
-            color: #00ff00;
-            font-family: monospace;
-            font-size: 10px;
-            padding: 8px;
-            height: 80px;
-            overflow-y: auto;
-            border-radius: 6px;
-            border: 1px solid #222;
-            margin-top: 10px;
-            direction: ltr;
-            text-align: left;
-        }
-
-        .option-broadcast {
-            background-color: #332200;
-            color: var(--gold);
-            font-weight: bold;
-        }
+        .option-broadcast { background-color: #8b0000 !important; color: #ffffff !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="app-container">
-    <header>
-        <h1>Job Syria</h1>
-        <div class="online-count">الموظفين: <span id="employee-online-count">0</span></div>
-    </header>
+<div id="auth-section" class="container">
+    <h1>JOB SYRIA</h1>
+    
+    <div id="credentials-inputs">
+        <input type="email" id="email" placeholder="البريد الإلكتروني">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button id="submit-auth-btn" onclick="submitAuth()">تسجيل الدخول</button>
+        <button class="link-btn" id="toggle-auth-btn" onclick="toggleAuthMode()">ليس لديك حساب؟ أنشئ حساباً جديداً</button>
+        <button class="link-btn" onclick="forceClearSession()" style="color:red; font-size:11px; margin-top:15px;">تنظيف الكاش وإعادة التعيين 🔄</button>
+    </div>
+    
+    <div id="username-inputs" class="hidden">
+        <p style="text-align:center; font-size:14px; color:#aaa; margin-top:0;">مرحباً بك! يرجى كتابة اسمك المستعار لإتمام حسابك:</p>
+        <input type="text" id="username" placeholder="اكتب اسمك الشخصي هنا (مثال: علي)">
+        <button onclick="saveUsername()">دخول للتطبيق</button>
+    </div>
+</div>
 
-    <!-- SECTION: AUTHENTICATION -->
-    <div id="auth-section" class="page">
-        <div class="auth-container">
-            <div class="auth-logo">
-                <img src="https://i.ibb.co/23cTDk18/1782795963942.png" alt="Logo">
-            </div>
+<div id="main-section" class="container hidden" style="margin-bottom: 60px; max-width: 500px;">
+    <h1 style="font-size: 20px;">JOB SYRIA</h1>
+    
+    <!-- 1️⃣ شات الدردشة العامة -->
+    <div id="page-chat" class="page">
+        <div class="emp-count-box">
+            👥 عدد الأعضاء المتواجدين معنا: <span id="employee-online-count">0</span> 
+        </div>
 
-            <div id="credentials-inputs">
-                <input type="email" id="email" placeholder="البريد الإلكتروني">
-                <input type="password" id="password" placeholder="كلمة المرور (8 خانات أو أكثر)">
-                <button id="submit-auth-btn" onclick="submitAuth()">تسجيل الدخول</button>
-                <button id="toggle-auth-btn" class="secondary" onclick="toggleAuthMode()">ليس لديك حساب؟ أنشئ حساباً جديداً</button>
-            </div>
-
-            <div id="username-inputs" class="hidden">
-                <input type="text" id="username" placeholder="اختر اسم مستعار فريد">
-                <button onclick="saveUsername()">تأكيد ودخول التطبيق</button>
-            </div>
+        <div id="chat-admin-panel" class="admin-chat-controls hidden">
+            <span class="chat-status-text">حالة الدردشة العامة: <span id="chat-status-lbl" style="color: var(--green);">مفتوحة</span></span>
+            <button id="toggle-chat-btn" class="btn-toggle-chat" onclick="toggleChatLockState()">قفل الدردشة 🔒</button>
+        </div>
+        
+        <div class="chat-box" id="chat-box"></div>
+        <div style="display:flex; gap: 8px;">
+            <input type="text" id="msg-text" placeholder="اكتب رسالتك..." style="margin:0;" onfocus="checkChatInputFocus()">
+            <button id="send-msg-btn" onclick="sendMessage()" style="width: auto; padding: 0 20px;">إرسال</button>
         </div>
     </div>
 
-    <!-- SECTION: MAIN APP (PAGES) -->
-    <div id="main-section" class="hidden" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+    <!-- 2️⃣ شات الدعم الفني والمشرفين -->
+    <div id="page-support" class="page hidden">
+        <div id="support-rooms-area" style="margin-bottom: 10px;">
+            <label id="support-selector-label" style="font-size: 11px; color: var(--gold); display: block; margin-bottom: 4px;">اختر المحادثة:</label>
+            <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="padding: 6px; margin: 0 0 10px 0; font-size: 12px;"></select>
+        </div>
+        <div class="chat-box" id="support-box"></div>
+        <div style="display:flex; gap: 8px; align-items: center;">
+            <input type="file" id="image-upload" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('image-upload').click()" style="width: auto; padding: 0 12px; background:#2c2c2c; border: 1px solid #444; color: white;">📷</button>
+            <input type="text" id="support-msg-text" placeholder="اكتب رسالتك للدعم..." style="margin:0;">
+            <button onclick="sendSupportMessage()" style="width: auto; padding: 0 15px;">إرسال</button>
+        </div>
+    </div>
+    
+    <!-- 3️⃣ الإعدادات -->
+    <div id="page-settings" class="page hidden">
+        <div class="salary-badge">💰 راتبك: <span id="my-salary">0</span> ل.س</div>
         
-        <!-- PAGE 1: PUBLIC CHAT -->
-        <div id="page-chat" class="page">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 12px; color: var(--text-secondary);">حالة الدردشة العامة: <strong id="chat-status-lbl">مفتوحة 🔓</strong></span>
-                <button id="toggle-chat-btn" class="hidden" onclick="toggleChatLockState()" style="width: auto; padding: 4px 10px; font-size: 11px;">قفل الدردشة 🔒</button>
-            </div>
-            <div id="chat-box" class="chat-box"></div>
-            <div class="chat-input-container">
-                <input type="text" id="msg-text" placeholder="اكتب رسالتك..." onfocus="checkChatInputFocus()">
-                <button id="send-msg-btn" onclick="sendMessage()">إرسال</button>
-            </div>
+        <div class="referral-section">
+            <div style="margin-bottom: 10px;">👥 عدد إحالاتك الناجحة: <strong id="my-referrals-count" style="color: var(--gold);">0</strong></div>
+            <button onclick="copyReferralLink()" style="font-size: 13px; padding: 8px; background-color: #333; color: var(--gold); border: 1px solid var(--gold);">📋 نسخ رابط الإحالة الخاص بي</button>
         </div>
 
-        <!-- PAGE 2: PRIVATE SUPPORT CHAT -->
-        <div id="page-support" class="page hidden">
-            <div class="card" style="margin-bottom: 8px; padding: 8px 12px;">
-                <label id="support-selector-label" style="font-size: 11px; color: var(--gold); display: block; margin-bottom: 4px;">اختر جهة التواصل:</label>
-                <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="margin-bottom: 0; padding: 6px; font-size: 12px;">
-                </select>
-            </div>
-
-            <div id="support-box" class="chat-box"></div>
-
-            <div class="chat-input-container">
-                <label for="image-upload" style="cursor: pointer; display: flex; align-items: center; padding: 0 8px; background: #222; border-radius: 6px; border: 1px solid #333;">
-                    📷
-                </label>
-                <input type="file" id="image-upload" accept="image/*" class="hidden">
-                <input type="text" id="support-msg-text" placeholder="اكتب رسالة خاصة...">
-                <button onclick="sendSupportMessage()">إرسال</button>
-            </div>
+        <div class="cash-section">
+            <label for="syriatel-cash-input">اكتب رمز سيريتل كاش الخاص بك</label>
+            <input type="text" id="syriatel-cash-input" placeholder="لا تشارك رقمك هنا حفاظاً على خصوصيتك">
+            <button onclick="updateSyriatelCash()" style="font-size: 13px; padding: 8px;">حفظ رمز كاش</button>
         </div>
 
-        <!-- PAGE 3: ADMIN & MANAGEMENT PANEL -->
-        <div id="page-admin" class="page hidden">
-            <div class="card">
-                <div class="card-title">🛡️ لوحة التحكم والإدارة</div>
-                <div id="chat-admin-panel" class="hidden" style="margin-bottom: 10px;">
-                    <button onclick="toggleChatLockState()" class="secondary" style="font-size: 12px; padding: 8px;">التحكم بقفل/فتح الدردشة العامة</button>
-                </div>
-            </div>
+        <input type="text" id="new-username" placeholder="تغيير الاسم">
+        <button onclick="updateUsername()">حفظ الاسم الجديد</button>
+        
+        <a href="https://whatsapp.com/channel/0029VbD3iZwI1rcbiOIUjn3z" target="_blank" style="text-decoration: none;">
+            <button class="btn-whatsapp">💬 تابع قناتنا الواتس اب</button>
+        </a>
 
-            <div class="card-title">📋 قائمة الموظفين والمستخدمين</div>
-            <div id="employees-list"></div>
+        <a id="contact-mail-link" href="mailto:zakaria728292@gmail.com?subject=تواصل من موظف - Job Syria" style="text-decoration: none;">
+            <button class="btn-contact">📧 تواصل معنا</button>
+        </a>
+
+        <button onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
+        
+        <!-- 🌟 شاشة المراقبة مع زر نسخ التوكن المخصص 🌟 -->
+        <div style="margin-top: 20px;">
+            <div style="font-size: 12px; color: var(--gold); margin-bottom: 5px; font-weight: bold;">معلومات الإشعارات (FCM Token):</div>
+            <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
+            <button type="button" onclick="copyFcmTokenFromMonitor()" style="background-color: #2196F3; color: white; border: none; padding: 10px; border-radius: 6px; margin-top: 8px; width: 100%; font-size: 13px; font-weight: bold; cursor: pointer;">
+                📋 نسخ توكن FCM من شاشة المراقبة
+            </button>
         </div>
-
-        <!-- PAGE 4: SETTINGS & PROFILE -->
-        <div id="page-settings" class="page hidden">
-            <div class="card">
-                <div class="card-title">👤 البيانات الشخصية</div>
-                <input type="text" id="new-username" placeholder="الاسم المستعار">
-                <button onclick="updateUsername()" style="margin-bottom: 15px;">تحديث الاسم</button>
-
-                <div class="card-title">💳 حساب سيريتل كاش</div>
-                <input type="text" id="syriatel-cash-input" placeholder="أدخل رقم أو رمز سيريتل كاش">
-                <button onclick="updateSyriatelCash()">حفظ الرمز</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">💰 الراتب والمكافآت</div>
-                <div style="font-size: 13px; margin-bottom: 6px;">الراتب الحالي: <strong id="my-salary" style="color: var(--gold);">0</strong> ل.س</div>
-                <div style="font-size: 13px; margin-bottom: 12px;">عدد الإحالات الناجحة: <strong id="my-referrals-count" style="color: var(--gold);">0</strong></div>
-                <button onclick="copyReferralLink()" class="secondary">🔗 نسخ رابط الإحالة الخاص بي</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">📡 المراقبة الفنية وشبكة الإشعارات</div>
-                <button onclick="copyFcmTokenFromMonitor()" style="font-size: 11px; padding: 6px; margin-bottom: 8px;">نسخ FCM Token</button>
-                <div id="monitor">> جاري تهيئة النظام...</div>
-            </div>
-
-            <button onclick="logout()" style="background-color: var(--red); color: white; margin-top: 10px;">تسجيل الخروج</button>
+    </div>
+    
+    <!-- 4️⃣ لوحة التحكم الإدارية للمشرفين والمدراء -->
+    <div id="page-admin" class="page hidden">
+        <h3>لوحة التحكم الإدارية المالية</h3>
+        <div id="employees-list"></div>
+    </div>
+    
+    <!-- الشريط السفلي -->
+    <div class="nav-bar">
+        <div class="nav-item active" id="nav-chat" onclick="switchPage('chat')">الدردشة</div>
+        <div class="nav-item" id="nav-support" onclick="switchPage('support')">
+            الدعم <span id="support-badge" class="red-dot hidden"></span>
         </div>
-
-        <!-- NAVIGATION BOTTOM BAR -->
-        <nav>
-            <div class="nav-item active" id="nav-chat" onclick="switchPage('chat')">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                الدردشة
-            </div>
-            <div class="nav-item" id="nav-support" onclick="switchPage('support')">
-                <div id="support-badge" class="badge hidden"></div>
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></svg>
-                الدعم
-            </div>
-            <div class="nav-item hidden" id="nav-admin" onclick="switchPage('admin')">
-                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
-                الإدارة
-            </div>
-            <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                الإعدادات
-            </div>
-        </nav>
+        <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">الإعدادات</div>
+        <div class="nav-item hidden" id="nav-admin" onclick="switchPage('admin')">الموظفين</div>
     </div>
 </div>
 
@@ -595,6 +322,7 @@
     let isSavingUser = false;
     let isChatLocked = false;
     let activeSupportRoomId = null;
+    let selectedAdminRecipientId = null; // متغيّر مضاف لحفظ المسؤول المختار عند الموظف
     let currentActivePage = 'chat'; 
     let tempUserDataAfterSignUp = null; 
 
@@ -990,8 +718,6 @@
             document.getElementById('support-badge').classList.add('hidden');
             if (myProfile && !['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role)) {
                 markRoomAsRead(myProfile.id);
-            } else if (activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
-                markRoomAsRead(activeSupportRoomId);
             }
         }
     }
@@ -1026,12 +752,10 @@
         if(!roomId || !myProfile) return;
         try {
             await _supabase.from('private_chats').update({ is_read: true }).eq('room_id', roomId).eq('is_read', false).neq('sender_id', myProfile.id);
-            if (['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role)) {
-                await loadSupportRoomsSelector();
-            }
         } catch (e) {}
     }
 
+    /* 🛠️ تعديل منطقي جوهري: فصل اختيار المسؤول عن تغيير الغرفة عند الموظف 🛠️ */
     async function loadSupportRoomsSelector() {
         const selector = document.getElementById('support-room-selector');
         const label = document.getElementById('support-selector-label');
@@ -1079,34 +803,36 @@
                 selector.innerHTML = broadcastOptionHtml + '<option value="">لا يوجد موظفين مسجلين حالياً</option>';
             }
         } else {
+            // الموظف: الغرفة هي دائماً معرّف حسابه الشخصي
+            activeSupportRoomId = myProfile.id;
             if(label) label.innerText = "اختر المسؤول الذي ترغب بالتحدث معه:";
             const { data: admins } = await _supabase.from('profiles').select('id, username, role').in('role', ['مدير', 'مشرف', 'مدير مالي']);
-            const savedSelectedAdmin = selector.value;
 
             if(admins && admins.length > 0) {
+                if(!selectedAdminRecipientId) {
+                    selectedAdminRecipientId = admins[0].id;
+                }
                 selector.innerHTML = admins.map(a => {
-                    const isSelected = savedSelectedAdmin ? (savedSelectedAdmin === a.id) : false;
+                    const isSelected = (selectedAdminRecipientId === a.id);
                     return `<option value="${a.id}" ${isSelected ? 'selected' : ''}>${a.username} (${a.role})</option>`;
                 }).join('');
-                if (!activeSupportRoomId || activeSupportRoomId === myProfile.id) {
-                    activeSupportRoomId = myProfile.id;
-                }
             } else {
-                selector.innerHTML = `<option value="${myProfile.id}">فريق الدعم الفني</option>`;
-                activeSupportRoomId = myProfile.id;
+                selector.innerHTML = `<option value="">فريق الدعم الفني</option>`;
             }
         }
     }
 
-    async function changeSupportActiveRoom(roomId) {
-        if(!roomId) return;
-        activeSupportRoomId = roomId;
-        
-        const box = document.getElementById('support-box');
-        if(box) box.innerHTML = '';
-
-        if (activeSupportRoomId !== 'broadcast_all') {
-            await markRoomAsRead(roomId);
+    async function changeSupportActiveRoom(value) {
+        const isStaff = ['مشرف', 'مدير', 'مدير مالي'].includes(myProfile.role);
+        if (isStaff) {
+            activeSupportRoomId = value;
+            if (activeSupportRoomId !== 'broadcast_all') {
+                await markRoomAsRead(value);
+            }
+        } else {
+            // الموظف يحتفظ برقم غرفته الخاص ويغير المسؤول المستهدف فقط
+            selectedAdminRecipientId = value;
+            activeSupportRoomId = myProfile.id;
         }
         await loadSupportMessages(activeSupportRoomId);
     }
