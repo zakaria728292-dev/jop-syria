@@ -185,9 +185,8 @@
 
 <script>
     let activeContextMenu = null;
-    let latestCapturedFcmToken = ""; // لحفظ آخر توكن تم جلبه لنسخه بسهولة
+    let latestCapturedFcmToken = ""; 
 
-    // 🔔 تفعيل طلب إذن الإشعارات فور فتح التطبيق
     if ("Notification" in window) {
         if (Notification.permission === "default") {
             Notification.requestPermission().then(permission => {
@@ -207,7 +206,6 @@
         return false;
     }
 
-    // 🌟 دالة إرسال الإشعار التطبيقي المحلي 🌟
     async function triggerNotification(title, body, imageUrl = null) {
         if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
@@ -335,7 +333,6 @@
         }
     }
 
-    // دالة زر النسخ المخصص للتوكن من شاشة المراقبة
     function copyFcmTokenFromMonitor() {
         if (!latestCapturedFcmToken) {
             alert('لم يتم رصد التوكن بعد، يرجى الانتظار قليلاً حتى يظهر في شاشة المراقبة.');
@@ -371,23 +368,21 @@
         return outputArray;
     }
 
-    // 🌟 حفظ وتحديث التوكن تلقائياً في قاعدة البيانات Supabase Database 🌟
+    // 🌟 دالة التعديل: حفظ وتحديث التوكن المباشر داخل fcm_token في جدول profiles 🌟
     async function saveTokenToDatabase(tokenString) {
         if (!myProfile || !tokenString) return;
         try {
             latestCapturedFcmToken = tokenString;
             
-            const { error } = await _supabase.from('user_notification_tokens').upsert({
-                user_id: myProfile.id,
-                subscription_json: tokenString, 
-                device_type: /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-                updated_at: new Date().toISOString()
-            });
+            const { error } = await _supabase
+                .from('profiles')
+                .update({ fcm_token: tokenString })
+                .eq('id', myProfile.id);
 
             if (error) {
-                log("⚠️ تعذر تحديث جدول التوكنات: " + error.message);
+                log("⚠️ تعذر تحديث fcm_token في profiles: " + error.message);
             } else {
-                log("💾 تم حفظ وتحديث التوكن في قاعدة البيانات بنجاح!");
+                log("💾 تم حفظ توكن FCM في جدول profiles بنجاح! 🎉");
             }
         } catch (e) {
             log("❌ خطأ أثناء حفظ التوكن بـ Supabase: " + e.message);
@@ -624,6 +619,7 @@
             loadEmployeeCount(); 
             setupPushToken();
             
+            // 🌟 حفظ التوكن الملتقط فور إكتمال التحقق من الجلسة 🌟
             if (latestCapturedFcmToken) {
                 await saveTokenToDatabase(latestCapturedFcmToken);
             }
@@ -1146,7 +1142,6 @@
         else { alert("تم تعديل رتبة المستخدم بنجاح!"); loadAdminPanel(); }
     }
 
-    // إدارة إشعارات Capacitor وتخزينها تلقائياً
     function logToScreen(message) {
         console.log(message);
         const debugBox = document.getElementById('monitor');
@@ -1185,7 +1180,7 @@
                         logToScreen("رمز FCM الخاص بالجهاز:");
                         logToScreen(token.value);
                         
-                        // 🌟 حفظ التوكن من Capacitor تلقائياً عند التسجيل
+                        // 🌟 حفظ التوكن الملتقط من أندرويد مباشرة في قاعدة البيانات 🌟
                         await saveTokenToDatabase(token.value);
                     });
 
