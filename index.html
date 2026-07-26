@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Job Syria</title>
     
     <!-- 🌟 خصائص تحويل الموقع إلى تطبيق مستقل (PWA / APK Wrapper) 🌟 -->
@@ -16,41 +16,73 @@
     <meta property="og:title" content="Job Syria" />
     <meta property="og:description" content="تطبيق للعمل اون لاين في سوريا" />
     <meta property="og:image" content="https://i.ibb.co/23cTDk18/1782795963942.png" />
-    <meta property="og:url" content="https://teal-douhua-036004.netlify.app/" />
+    <meta property="og:url" content="https://small-cell-6846.zakaria728292.workers.dev/" />
     <meta property="og:type" content="website" />
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #D4AF37; --dark-bg: #121212; --card-bg: #1E1E1E; --text-white: #ffffff; --red: #ff3b30; --green: #34c759; --whatsapp-green: #25D366; }
-        body { background-color: var(--dark-bg); color: var(--text-white); font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: center; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
-        .container { background-color: var(--card-bg); border: 2px solid var(--gold); border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); box-sizing: border-box; }
-        h1 { color: var(--gold); text-align: center; margin-bottom: 24px; letter-spacing: 2px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 16px; background-color: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; box-sizing: border-box; -webkit-user-select: text; user-select: text; }
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            background-color: var(--dark-bg); 
+            color: var(--text-white); 
+            font-family: system-ui, -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            width: 100vw;
+            overflow-x: hidden;
+            -webkit-user-select: none; 
+            user-select: none; 
+        }
+
+        /* 🌟 جعل الحاوية ملء الشاشة بالكامل 🌟 */
+        .container { 
+            background-color: var(--dark-bg); 
+            border: none;
+            border-radius: 0; 
+            padding: 16px; 
+            width: 100%; 
+            max-width: 100%; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        h1 { color: var(--gold); text-align: center; margin: 10px 0 20px 0; font-size: 22px; letter-spacing: 1px; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 16px; background-color: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; box-sizing: border-box; -webkit-user-select: text; user-select: text; font-size: 14px; }
         input:focus, select:focus { border-color: var(--gold); outline: none; }
-        button { width: 100%; padding: 12px; background-color: var(--gold); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: var(--gold); color: black; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
         button:hover { background-color: #c5a028; }
-        .link-btn { background: none; color: var(--gold); border: none; text-align: center; width: 100%; margin-top: 10px; text-decoration: underline; font-size: 14px; cursor: pointer; }
+        .link-btn { background: none; color: var(--gold); border: none; text-align: center; width: 100%; margin-top: 10px; text-decoration: underline; font-size: 13px; cursor: pointer; }
         .hidden { display: none !important; }
-        .nav-bar { display: flex; justify-content: space-around; background-color: #1a1a1a; padding: 10px 0; position: fixed; bottom: 0; left: 0; width: 100%; border-top: 1px solid var(--gold); z-index: 1000; }
-        .nav-item { color: #888; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; position: relative; }
+        
+        /* 🌟 شريط التنقل السفلي ملء الشاشة 🌟 */
+        .nav-bar { display: flex; justify-content: space-around; background-color: #1a1a1a; padding: 12px 0; position: fixed; bottom: 0; left: 0; width: 100%; border-top: 1px solid var(--gold); z-index: 1000; }
+        .nav-item { color: #888; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 4px; position: relative; }
         .nav-item.active { color: var(--gold); }
         
         .red-dot { width: 8px; height: 8px; background-color: var(--red); border-radius: 50%; display: inline-block; }
-        .emp-count-box { background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 8px 12px; text-align: center; font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 12px; box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.05); }
+        .emp-count-box { background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; color: var(--gold); margin-bottom: 12px; }
 
-        /* صناديق الدردشة */
-        .chat-box { height: 380px; overflow-y: auto; border: 1px solid #333; padding: 10px; margin-bottom: 10px; background: #151515; border-radius: 8px; }
-        .msg { margin-bottom: 10px; padding: 8px; background: #222; border-radius: 6px; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .msg-user { color: var(--gold); font-weight: bold; font-size: 12px; }
+        /* 🌟 تكبير وتوسيع صناديق الدردشة 🌟 */
+        .page { width: 100%; display: flex; flex-direction: column; flex: 1; padding-bottom: 65px; }
+        .chat-box { flex: 1; height: calc(100vh - 210px); min-height: 350px; overflow-y: auto; border: 1px solid rgba(212, 175, 55, 0.3); padding: 12px; margin-bottom: 10px; background: #151515; border-radius: 12px; }
+        .msg { margin-bottom: 12px; padding: 10px; background: #222; border-radius: 8px; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .msg-user { color: var(--gold); font-weight: bold; font-size: 13px; }
         .msg-green { color: #00ff00 !important; font-weight: bold; font-size: 13px; }
-        .chat-img { max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid #444; cursor: pointer; }
+        .chat-img { max-width: 100%; max-height: 250px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid #444; cursor: pointer; }
         
         .chat-link { color: #3498db !important; text-decoration: underline !important; font-weight: bold; cursor: pointer; -webkit-user-select: auto; user-select: auto; word-break: break-all; display: inline-block; }
-        .chat-link:hover { color: #5dade2 !important; }
 
         .custom-context-menu { position: fixed; background: #151515; border: 1px solid #333; border-radius: 8px; padding: 6px 0; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); min-width: 140px; }
-        .context-menu-item { padding: 10px 16px; font-size: 14px; color: rgba(255, 255, 255, 0.7); cursor: pointer; text-align: right; transition: background 0.2s; }
-        .context-menu-item:hover { background: #222; color: #fff; }
+        .context-menu-item { padding: 10px 16px; font-size: 14px; color: rgba(255, 255, 255, 0.7); cursor: pointer; text-align: right; }
 
         .salary-badge { background: #2c2510; border: 1px solid var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 18px; margin-bottom: 20px; }
         .referral-section { background: #1a1a1a; border: 1px dashed var(--gold); padding: 15px; border-radius: 8px; text-align: center; font-size: 14px; margin-bottom: 20px; }
@@ -60,10 +92,8 @@
         .cash-section label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
         
         .btn-whatsapp { background-color: var(--whatsapp-green); color: #fff; font-weight: bold; font-size: 14px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; }
-        .btn-whatsapp:hover { background-color: #1ebc57; }
-
         .btn-contact { background-color: #242424; color: #fff; border: 1px solid #555; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #monitor { width: 100%; max-width: 400px; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; -webkit-user-select: text; user-select: text; word-break: break-all; }
+        #monitor { width: 100%; background: #000; color: #4aff4a; font-family: monospace; font-size: 11px; padding: 10px; margin-top: 15px; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; text-align: left; max-height: 120px; overflow-y: auto; word-break: break-all; }
 
         .admin-chat-controls { display: flex; justify-content: space-between; align-items: center; background: #222; border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
         .chat-status-text { font-size: 12px; font-weight: bold; }
@@ -74,7 +104,7 @@
 </head>
 <body>
 
-<div id="auth-section" class="container">
+<div id="auth-section" class="container" style="justify-content: center;">
     <h1>JOB SYRIA</h1>
     
     <div id="credentials-inputs">
@@ -92,7 +122,7 @@
     </div>
 </div>
 
-<div id="main-section" class="container hidden" style="margin-bottom: 60px; max-width: 500px;">
+<div id="main-section" class="container hidden">
     <h1 style="font-size: 20px;">JOB SYRIA</h1>
     
     <!-- 1️⃣ شات الدردشة العامة -->
@@ -117,7 +147,7 @@
     <div id="page-support" class="page hidden">
         <div id="support-rooms-area" style="margin-bottom: 10px;">
             <label id="support-selector-label" style="font-size: 11px; color: var(--gold); display: block; margin-bottom: 4px;">اختر المحادثة:</label>
-            <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="padding: 6px; margin: 0 0 10px 0; font-size: 12px;"></select>
+            <select id="support-room-selector" onchange="changeSupportActiveRoom(this.value)" style="padding: 8px; margin: 0 0 10px 0; font-size: 13px;"></select>
         </div>
         <div class="chat-box" id="support-box"></div>
         <div style="display:flex; gap: 8px; align-items: center;">
@@ -156,7 +186,6 @@
 
         <button onclick="logout()" style="background-color: #8b0000; color: white; margin-top: 30px;">تسجيل الخروج</button>
         
-        <!-- 🌟 شاشة المراقبة مع زر نسخ التوكن المخصص 🌟 -->
         <div style="margin-top: 20px;">
             <div style="font-size: 12px; color: var(--gold); margin-bottom: 5px; font-weight: bold;">معلومات الإشعارات (FCM Token):</div>
             <div id="monitor">🖥️ شاشة المراقبة: جاهز...</div>
@@ -166,7 +195,7 @@
         </div>
     </div>
     
-    <!-- 4️⃣ لوحة التحكم الإدارية للمشرفين والمدراء -->
+    <!-- 4️⃣ لوحة التحكم الإدارية -->
     <div id="page-admin" class="page hidden">
         <h3>لوحة التحكم الإدارية المالية</h3>
         <div id="employees-list"></div>
@@ -186,13 +215,37 @@
 <script>
     let activeContextMenu = null;
     let latestCapturedFcmToken = ""; 
+    let audioCtx = null;
+
+    // 🌟 تفعيل الصوت النقي عبر Web Audio API للتغلب على قيود المتصفح
+    function playBeepSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); // تردد التنبيه
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25); // مدة التنبيه
+        } catch(e) {}
+    }
+
+    // تفعيل السياق الصوتي فور أول تفاعل لمس
+    document.addEventListener('click', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
+    document.addEventListener('touchstart', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true });
 
     if ("Notification" in window) {
         if (Notification.permission === "default") {
             Notification.requestPermission().then(permission => {
-                if(permission === "granted") {
-                    setupPushToken();
-                }
+                if(permission === "granted") { setupPushToken(); }
             });
         }
     }
@@ -206,36 +259,30 @@
         return false;
     }
 
-    /* 🌟 1️⃣ تحسين إظهار الإشعارات وتشغيل نغمة تنبيه صوتية 🌟 */
+    /* 🌟 إطلاق الإشعارات مع الصوت المضمن وتنبيهات المسؤولين 🌟 */
     async function triggerNotification(title, body, imageUrl = null) {
+        playBeepSound(); // تشغيل الصوت المضمون
+        
+        if (navigator.vibrate) { navigator.vibrate([300, 100, 300]); }
+
         if ("Notification" in window && Notification.permission === "granted") {
             const notificationOptions = {
                 body: body,
                 icon: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 badge: "https://i.ibb.co/23cTDk18/1782795963942.png",
                 image: imageUrl ? imageUrl : undefined,
-                vibrate: [400, 100, 400, 100, 400],
+                vibrate: [300, 100, 300],
                 renotify: true,
                 tag: "job-syria-notification",
                 silent: false
             };
 
-            // 🔊 تشغيل صوت تنبيه عند وصول الإشعار
-            try {
-                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                audio.play().catch(() => {});
-            } catch(e) {}
-
             if ('serviceWorker' in navigator) {
                 try {
                     const reg = await navigator.serviceWorker.ready;
                     reg.showNotification(title, notificationOptions);
-                } catch (e) {
-                    new Notification(title, notificationOptions);
-                }
-            } else {
-                new Notification(title, notificationOptions);
-            }
+                } catch (e) { new Notification(title, notificationOptions); }
+            } else { new Notification(title, notificationOptions); }
         }
     }
 
@@ -345,13 +392,11 @@
 
     function copyFcmTokenFromMonitor() {
         if (!latestCapturedFcmToken) {
-            alert('لم يتم رصد التوكن بعد، يرجى الانتظار قليلاً حتى يظهر في شاشة المراقبة.');
+            alert('لم يتم رصد التوكن بعد...');
             return;
         }
         navigator.clipboard.writeText(latestCapturedFcmToken).then(() => {
             alert('تم نسخ توكن FCM بنجاح! 🎉');
-        }).catch(err => {
-            alert('تعذر النسخ التلقائي، يمكنك تحديده يدوياً من صندوق المراقبة.');
         });
     }
 
@@ -361,12 +406,11 @@
 
         try {
             const { data, error } = await _supabase.auth.getSession();
-            if (error) { log("خطأ جلسة: " + error.message); return; }
+            if (error) return;
             if (data && data.session) {
-                log("تم العثور على جلسة نشطة.");
                 checkUserSession(data.session.user.id);
-            } else { log("لا توجد جلسة معلقة."); }
-        } catch (e) { log("خطأ بالإقلاع: " + e.message); }
+            }
+        } catch (e) {}
     };
 
     function urlBase64ToUint8Array(base64String) {
@@ -382,20 +426,8 @@
         if (!myProfile || !tokenString) return;
         try {
             latestCapturedFcmToken = tokenString;
-            
-            const { error } = await _supabase
-                .from('profiles')
-                .update({ fcm_token: tokenString })
-                .eq('id', myProfile.id);
-
-            if (error) {
-                log("⚠️ تعذر تحديث fcm_token في profiles: " + error.message);
-            } else {
-                log("💾 تم حفظ توكن FCM في جدول profiles بنجاح! 🎉");
-            }
-        } catch (e) {
-            log("❌ خطأ أثناء حفظ التوكن بـ Supabase: " + e.message);
-        }
+            await _supabase.from('profiles').update({ fcm_token: tokenString }).eq('id', myProfile.id);
+        } catch (e) {}
     }
 
     async function setupPushToken() {
@@ -415,23 +447,18 @@
             
             const tokenStr = JSON.stringify(sub);
             await saveTokenToDatabase(tokenStr);
-            log("🔔 تم تحديث وربط توكن الإشعارات بنجاح.");
-        } catch (e) { log("❌ فشل تفعيل توكن الإشعارات: " + e.message); }
+        } catch (e) {}
     }
 
     function checkReferralInURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
-        if (refCode) {
-            localStorage.setItem('referred_by', refCode.trim());
-            log("🔗 تم حفظ كود إحالة: " + refCode);
-        }
+        if (refCode) { localStorage.setItem('referred_by', refCode.trim()); }
     }
 
     function forceClearSession() {
         localStorage.clear();
         _supabase.auth.signOut();
-        log("تم تنظيف الكاش.");
         setTimeout(() => { location.reload(); }, 300);
     }
 
@@ -451,7 +478,6 @@
             if(isSignUp) {
                 const { data, error } = await _supabase.auth.signUp({ email, password });
                 if(error) { alert(error.message); return; }
-                
                 if (data && data.user) {
                     tempUserDataAfterSignUp = data.user;
                     await _supabase.auth.signInWithPassword({ email, password });
@@ -463,7 +489,7 @@
                 if(error) { alert(error.message); return; }
                 checkUserSession(data.user.id);
             }
-        } catch (e) { log("❌ خطأ: " + e.message); }
+        } catch (e) {}
     }
 
     async function saveUsername() {
@@ -483,14 +509,10 @@
             
             let currentUser = null;
             const { data: sessionData } = await _supabase.auth.getUser();
-            if (sessionData && sessionData.user) {
-                currentUser = sessionData.user;
-            } else if (tempUserDataAfterSignUp) {
-                currentUser = tempUserDataAfterSignUp;
-            }
+            if (sessionData && sessionData.user) { currentUser = sessionData.user; } 
+            else if (tempUserDataAfterSignUp) { currentUser = tempUserDataAfterSignUp; }
 
             if (!currentUser) {
-                alert("حدث خطأ في صلاحية الجلسة، يرجى إعادة تسجيل الدخول لتأكيد الاسم الشخصي.");
                 forceClearSession();
                 return;
             }
@@ -499,13 +521,11 @@
             const invitedBy = localStorage.getItem('referred_by') || null;
             localStorage.removeItem('referred_by');
             
-            const { error } = await _supabase.from('profiles').upsert({ 
+            await _supabase.from('profiles').upsert({ 
                 id: currentUser.id, username: username, email: currentUser.email,
                 role: 'موظف', is_banned: false, referral_code: myReferralCode,
                 referred_by: invitedBy, referral_count: 0, salary: 0, syriatel_cash: ''
             });
-            
-            if(error) { alert(error.message); isSavingUser = false; return; }
 
             const welcomeMessage = `أهلاً بكم في تطبيق [ job syria ] \n\nشارك التطبيق من خلال رابط الإحالة الخاص بك "ستجده في قائمة الإعدادات" \n\nواكسب جوائز ستضاف الى راتبك على كل احالة\n\n^لستم ملزمون بوقت عمل محدد ^`;
             
@@ -523,27 +543,23 @@
             
             tempUserDataAfterSignUp = null;
             checkUserSession(currentUser.id);
-        } catch (e) { log("❌ خطأ بحفظ الاسم: " + e.message); } 
+        } catch (e) {} 
         finally { isSavingUser = false; }
     }
 
     async function processReferralReward(refCode) {
         try {
-            log("🔄 جاري معالجة مكافأة الإحالة للكود: " + refCode);
             const rewardAmount = 2500;
             const { error: rpcError } = await _supabase.rpc('add_referral_reward', { ref_code: refCode, reward_amount: rewardAmount });
+            if (!rpcError) return;
 
-            if (!rpcError) { log("✅ تمت إضافة مكافأة الإحالة بنجاح!"); return; }
-
-            const { data: inviter, error } = await _supabase.from('profiles').select('id, salary, referral_count').eq('referral_code', refCode).maybeSingle();
-            if (error) return;
-
+            const { data: inviter } = await _supabase.from('profiles').select('id, salary, referral_count').eq('referral_code', refCode).maybeSingle();
             if (inviter) {
                 const newSalary = (parseFloat(inviter.salary) || 0) + rewardAmount;
                 const newCount = (parseInt(inviter.referral_count) || 0) + 1;
                 await _supabase.from('profiles').update({ salary: newSalary, referral_count: newCount }).eq('id', inviter.id);
             }
-        } catch (err) { log("❌ خطأ بنظام الإحالة: " + err.message); }
+        } catch (err) {}
     }
 
     async function loadEmployeeCount() {
@@ -631,7 +647,7 @@
             if (latestCapturedFcmToken) {
                 await saveTokenToDatabase(latestCapturedFcmToken);
             }
-        } catch(e) { log("❌ خطأ فحص الحساب: " + e.message); }
+        } catch(e) {}
     }
 
     function listenToBans(uid) {
@@ -695,8 +711,7 @@
 
         const newState = !isChatLocked;
         try {
-            const { error } = await _supabase.from('system_settings').update({ value: newState.toString() }).eq('key', 'chat_locked');
-            if (error) { await _supabase.from('system_settings').upsert({ key: 'chat_locked', value: newState.toString() }); }
+            await _supabase.from('system_settings').upsert({ key: 'chat_locked', value: newState.toString() });
             applyChatLockState(newState);
         } catch (e) { applyChatLockState(newState); }
     }
@@ -709,13 +724,10 @@
         else { alert("تم حفظ الرمز بنجاح! 🎉"); myProfile.syriatel_cash = cashCode; }
     }
 
-    /* 🌟 إصلاح رابط الدعوة بتثبيت رابط الموقع الأصلي بدلاً من localhost 🌟 */
     function copyReferralLink() {
         if (!myProfile || !myProfile.referral_code) return alert('الرجاء الانتظار...');
-        
         const baseUrl = "https://small-cell-6846.zakaria728292.workers.dev";
         const referralLink = `${baseUrl}/?ref=${myProfile.referral_code}`;
-        
         const formattedText = `تطبيق للعمل اون لاين في سوريا 🇸🇾✨\nسجل الآن وابدأ بربح راتبك المباشر اليومي عبر الإحالات والمهام:\n${referralLink}`;
         
         navigator.clipboard.writeText(formattedText).then(() => { 
@@ -861,12 +873,9 @@
                     is_read: false
                 }));
 
-                const { error } = await _supabase.from('private_chats').insert(msgsToInsert);
-                if (error) { alert("خطأ أثناء إرسال الرسالة الجماعية: " + error.message); } 
-                else {
-                    alert("تم إرسال الرسالة الجماعية بنجاح إلى جميع المستلمين! 🎉");
-                    document.getElementById('support-msg-text').value = '';
-                }
+                await _supabase.from('private_chats').insert(msgsToInsert);
+                alert("تم إرسال الرسالة الجماعية بنجاح إلى جميع المستلمين! 🎉");
+                document.getElementById('support-msg-text').value = '';
             }
             return;
         }
@@ -891,7 +900,6 @@
             return alert("عذراً، رفع الصور غير متاح في خيار الرسائل الجماعية.");
         }
         
-        log("جاري رفع الصورة...");
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         
@@ -923,16 +931,11 @@
         let { data } = await _supabase.from('private_chats').select('*').eq('room_id', roomId).order('created_at');
         box.innerHTML = '';
         
-        if(data) {
-            data.forEach(msg => appendMessage(msg, 'support-box')); 
-        }
+        if(data) { data.forEach(msg => appendMessage(msg, 'support-box')); }
     }
 
-    /* 🌟 3️⃣ إصلاح وصول التنبيهات للمشرفين والمدراء عند وجود رسالة جديدة 🌟 */
+    /* 🌟 إصلاح تنبيهات وشارات المسؤلين لتصل فوراً بجميع الحالات 🌟 */
     async function setupSupportRealtime() {
-        const box = document.getElementById('support-box');
-        if(!box || !activeSupportRoomId) return;
-
         const isStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(myProfile.role);
 
         if (currentActivePage === 'support' && activeSupportRoomId === myProfile.id) {
@@ -941,13 +944,14 @@
         
         await loadSupportMessages(activeSupportRoomId);
 
-        _supabase.channel('private_chats_global_channel').unsubscribe();
+        _supabase.channel('private_chats_realtime_global').unsubscribe();
 
-        _supabase.channel('private_chats_global_channel')
+        _supabase.channel('private_chats_realtime_global')
             .on('postgres_changes', { event: 'INSERT', table: 'private_chats' }, async p => {
                 const newMsg = p.new;
                 const isSenderStaff = ['مدير', 'مشرف', 'مدير مالي'].includes(newMsg.role);
                 
+                // تحديث صندوق الرسائل الحالي إذا كانت المحادثة مفتوحة
                 if (newMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
                     await loadSupportMessages(activeSupportRoomId);
                     if (newMsg.sender_id !== myProfile.id && currentActivePage === 'support') {
@@ -955,30 +959,23 @@
                     }
                 } 
 
-                // 🌟 إرسال الإشعار والتنبيه فوراً إذا كان المرسل شخصاً آخر
+                // 🔔 إطلاق الإشعار والصوت للمسؤولين والمستخدمين
                 if (newMsg.sender_id !== myProfile.id) {
                     if (isStaff && !isSenderStaff) {
-                        // إشعار شامل لكل المشرفين والمدراء عند أية رسالة من الموظفين
                         triggerNotification(`طلب دعم جديد من: ${newMsg.sender_name || 'موظف'}`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
-                    }
-                    else if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
-                        // إشعار للموظف عند إرسال الإدارة له
-                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
-                    }
-                }
-
-                if (newMsg.sender_id !== myProfile.id) {
-                    if (isStaff && newMsg.room_id !== activeSupportRoomId && !isSenderStaff) {
                         document.getElementById('support-badge').classList.remove('hidden');
                         await loadSupportRoomsSelector();
-                    } else if (!isStaff && newMsg.room_id === myProfile.id && currentActivePage !== 'support') {
-                        document.getElementById('support-badge').classList.remove('hidden');
+                    }
+                    else if (!isStaff && newMsg.room_id === myProfile.id && isSenderStaff) {
+                        triggerNotification(`رسالة هامة من الإدارة 🔔`, newMsg.message_text || "أرسل صورة 📷", newMsg.image_url);
+                        if (currentActivePage !== 'support') {
+                            document.getElementById('support-badge').classList.remove('hidden');
+                        }
                     }
                 }
             })
             .on('postgres_changes', { event: 'UPDATE', table: 'private_chats' }, async p => {
-                const updatedMsg = p.new;
-                if (updatedMsg.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
+                if (p.new.room_id === activeSupportRoomId && activeSupportRoomId !== 'broadcast_all') {
                     await loadSupportMessages(activeSupportRoomId);
                 }
             })
@@ -1130,12 +1127,9 @@
 
         try {
             const { error } = await _supabase.from('profiles').update({ salary: newSalary }).eq('id', id);
-            if (error) { alert("فشل تحديث الراتب: " + error.message); } 
-            else {
-                alert("تم تحديث وحفظ الراتب بنجاح! 🎉");
-                loadAdminPanel(); 
-            }
-        } catch(e) { alert("خطأ أثناء العملية: " + e.message); }
+            if (error) alert("فشل تحديث الراتب: " + error.message);
+            else { alert("تم تحديث وحفظ الراتب بنجاح! 🎉"); loadAdminPanel(); }
+        } catch(e) {}
     }
     
     async function toggleUserBan(id, currentBanStatus) {
@@ -1155,11 +1149,8 @@
     }
 
     function logToScreen(message) {
-        console.log(message);
         const debugBox = document.getElementById('monitor');
-        if (debugBox) {
-            debugBox.innerHTML += `<br> > ${message}`;
-        }
+        if (debugBox) { debugBox.innerHTML += `<br> > ${message}`; }
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1183,32 +1174,15 @@
                     if (permStatus.receive === 'granted') {
                         await PushNotifications.register();
                         logToScreen("تم منح إذن الإشعارات بنجاح");
-                    } else {
-                        logToScreen("تم رفض إذن الإشعارات");
                     }
 
                     PushNotifications.addListener('registration', async (token) => {
                         latestCapturedFcmToken = token.value;
-                        logToScreen("رمز FCM الخاص بالجهاز:");
-                        logToScreen(token.value);
-                        
                         await saveTokenToDatabase(token.value);
                     });
 
-                    PushNotifications.addListener('registrationError', (err) => {
-                        logToScreen("خطأ في التسجيل: " + JSON.stringify(err));
-                    });
-
-                    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                        logToScreen("وصل إشعار: " + notification.title);
-                    });
-
-                } else {
-                    logToScreen("إضافة PushNotifications غير متوفرة (وضع المتصفح)");
                 }
-            } catch (e) {
-                logToScreen("خطأ في النظام: " + e.message);
-            }
+            } catch (e) {}
         }, 1500);
     });
 </script>
